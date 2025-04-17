@@ -2,7 +2,7 @@
 CXX = g++
 
 SRC = main.cpp scanner.cpp
-OBJ = main.o scanner.OBJ
+OBJ = main.o scanner.o
 
 TARGET = lexer
 

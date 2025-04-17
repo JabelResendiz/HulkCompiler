@@ -1,6 +1,8 @@
 
 
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include "scanner.h"
 
 using namespace std;
@@ -9,7 +11,16 @@ using namespace HULK_LEXER;
 
 int main()
 {
-    string code = "if(\"HOla protocol mundo{}\" protocol ashdjhjhja898 print8998 787878)";
+    ifstream file("example.hulk");
+    if (!file.is_open())
+    {
+        cerr << "Error: no se pudo abrir el archivo." << endl;
+        return 1;
+    }
+
+    stringstream buffer;
+    buffer << file.rdbuf();  
+    string code = buffer.str();
 
     Scanner scanner(code);
 

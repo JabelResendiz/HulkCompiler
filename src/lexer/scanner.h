@@ -25,6 +25,11 @@ namespace HULK_LEXER
         void scanToken();
         void addToken(TokenType type);
         char peek();
+        bool match(char expected);
+        void scanString();
+        void scanNumber();
+        void scanIdentifier();
+        char peekNext();
 
     public:
         Scanner(std::string source);

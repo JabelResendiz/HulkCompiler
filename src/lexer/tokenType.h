@@ -95,7 +95,7 @@ namespace HULK_LEXER
         DOT,       // .
 
         // Comentarios (si querés reconocerlos)
-        COMMENT,
+        COMMENT, // //
 
         // Fin de archivo
         END_OF_FILE,

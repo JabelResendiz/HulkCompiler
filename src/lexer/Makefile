@@ -6,7 +6,7 @@ OBJ = main.o scanner.OBJ
 
 TARGET = lexer
 
-CXXFLAGS = -std= c++17
+CXXFLAGS = -std=c++17
 
 all: $(TARGET)
 

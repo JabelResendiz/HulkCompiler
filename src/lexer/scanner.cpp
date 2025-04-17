@@ -11,6 +11,8 @@ namespace HULK_LEXER
         IN_NUMBER,
         IN_IDENTIFIER,
         IN_STRING,
+        IN_COMMENT,
+        ERROR,
         DONE
     };
 
@@ -79,6 +81,69 @@ namespace HULK_LEXER
     }
 
 
+    bool Scanner::match(char expected)
+    {
+        if (isAtEnd() || source[current] != expected)
+            return false;
+        
+            current ++;
+            col ++;
+
+            return true;
+    }
+
+    void Scanner::scanString()
+    {
+        while(peek() != '"' && !isAtEnd())
+        {
+            if (peek() == '\n')
+            {
+                line ++;
+                col =0;
+            }
+
+            advance();
+        }
+
+        if (isAtEnd())
+            return ;
+
+        advance();
+        addToken(TokenType::STRING);
+    }
+
+
+    void Scanner::scanNumber()
+    {
+        while(std::isdigit(peek())) advance();
+
+        if (peek() == '.' && std::isdigit(peekNext()))
+        {
+            advance();
+            while(std::isdigit(peek()))advance();
+        }
+
+        addToken(TokenType::NUMBER);
+    }
+
+    void Scanner::scanIdentifier()
+    {
+        while(std::isalnum(peek()) || peek() == '_')advance();
+        
+        std::string text = source.substr(start,current-start);
+
+        TokenType type = getKeywordType(text);
+
+        addToken(type);
+    }
+
+    char Scanner::peekNext()
+    {
+        if (current +1 >= source.length()) return '\0';
+
+        return source[current +1];
+    }
+
     void Scanner::addToken(TokenType type)
     {
         std::string lexeme = source.substr(start,current - start);
@@ -135,6 +200,82 @@ namespace HULK_LEXER
 
                     switch (c)
                     {
+
+                    case '>':
+                        if (peek() == '=')
+                        {
+                            advance();
+                            addToken(TokenType::GTE);
+                        }
+                        else addToken(TokenType::GT);
+                        break;
+
+                    case '<':
+                        if (peek() == '=')
+                        {
+                            advance();
+                            addToken(TokenType::LTE);
+                        }
+                        else addToken(TokenType::LT);
+                        break;
+                    
+                    case '=':
+                        if (peek() == '=')
+                        {
+                            advance();
+                            addToken(TokenType::EQ);
+                        }
+                        else if (peek()== '>')
+                        {
+                            advance();
+                            addToken(TokenType::ARROW);
+                        } 
+                        else addToken(TokenType::ASSIGN);
+                        break;
+
+                    case '-':
+                        if(peek()== '>')
+                        {
+                            advance();
+                            addToken(TokenType::SIMPLE_ARROW);
+                        }
+                        else addToken(TokenType::MINUS);
+                        break;
+
+                    case '/':
+                        if(peek()== '/')
+                        {
+                            advance();
+                            addToken(TokenType::COMMENT);
+                        }
+                        else addToken(TokenType::DIV);
+                        break;
+                    
+                    case '!':
+                        if (peek() == '=')
+                        {
+                            advance();
+                            addToken(TokenType::NEQ);
+                        }
+                        else addToken(TokenType::NOT);
+                        break;
+                    
+                    case ':':
+                        if (peek() == '=')
+                        {
+                            advance();
+                            addToken(TokenType::DESTRUCTIVE_ASSIGN);
+                        }
+                        else if (peek()== ':')
+                        {
+                            advance();
+                            addToken(TokenType::DOUBLE_COLON);
+                        }
+                         addToken(TokenType::COLON);
+                        break;
+
+
+
                     case '(': addToken(TokenType::LPAREN);break;
                     case ')':addToken(TokenType::RPAREN);break;
                     case '{':addToken(TokenType::LBRACE);break;
@@ -145,9 +286,7 @@ namespace HULK_LEXER
                     case ';':addToken(TokenType::SEMICOLON);break;
                     case '.':addToken(TokenType::DOT);break;
                     case '+':addToken(TokenType::PLUS);break;
-                    case '-':addToken(TokenType::MINUS);break;
                     case '*':addToken(TokenType::MULT);break;
-                    case '/':addToken(TokenType::DIV);break;
                     case '^':addToken(TokenType::POW);break;
                     case '%':addToken(TokenType::MOD);break;
                     case '&':addToken(TokenType::AND);break;
@@ -221,3 +360,6 @@ namespace HULK_LEXER
 
     }
 }
+
+
+

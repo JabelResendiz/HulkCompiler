@@ -12,7 +12,7 @@ namespace HULK_LEXER
     class Scanner
     {
     private:
-        std::string source;
+        std::string source; 
         int start;
         int current;
         int line;

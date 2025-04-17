@@ -1,7 +1,5 @@
-
-
 #ifndef TOKEN_TYPE_H
-#define TOKEN_TYPE_H // evitar incluir el archivo token.h mas de una vez
+#define TOKEN_TYPE_H
 #include <string>
 
 namespace HULK_LEXER
@@ -23,7 +21,7 @@ namespace HULK_LEXER
         FALSE,
 
         TYPE,
-        PROTCOL,
+        PROTOCOL,
         EXTENDS,
         OTHER,
         NEW,
@@ -51,7 +49,7 @@ namespace HULK_LEXER
         AUTOMATIC_PARAMETER, // (?) revisar la seccion 17
         NUMBER,
         STRING,
-        BOOLEAN,
+        // BOOLEAN,
 
         // CONSTANTS
         PI,
@@ -107,10 +105,7 @@ namespace HULK_LEXER
         UNKNOWN
     };
 
-    // GLOBAL VARIABLES
-    static std::string IdentifierStr; // Filled in if tok_identifier
-    static double NumVal;        // Filled in if tok_number
-
+    
 }
 
 #endif

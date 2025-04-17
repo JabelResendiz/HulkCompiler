@@ -20,7 +20,7 @@ namespace HULK_LEXER
 
             std::string toString() const
             {
-                return std::to_string(type) + " " + lexeme;
+                return std::to_string(type) + " " + lexeme + " " +std::to_string(line) + " " + std::to_string(col);
             }
     };
 }

@@ -9,7 +9,7 @@ using namespace HULK_LEXER;
 
 int main()
 {
-    string code = "(1+2) - 3";
+    string code = "if(\"HOla mundo{}\" ashdjhjhja898 print8998 787878)";
 
     Scanner scanner(code);
 

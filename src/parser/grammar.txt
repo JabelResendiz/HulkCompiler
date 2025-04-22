@@ -1,0 +1,51 @@
+program
+    : function_decls expression ';'?             /* único punto de entrada */ 
+    ;
+
+function_decls
+    : /* vacío */                                /* cero o más funciones globales */
+    | function_decls function_decl
+    ;
+
+function_decl
+    : FUNCTION IDENTIFIER '(' parameter_list? ')' ARROW expression ';'  
+                                                 /* inline: cuerpo = expr */  
+    | FUNCTION IDENTIFIER '(' parameter_list? ')' 
+      '{' expression_seq '}' ';'?               /* full‑form: cuerpo = bloque */  
+    ;
+
+parameter_list
+    : IDENTIFIER
+    | parameter_list ',' IDENTIFIER
+    ;
+
+argument_list
+    : expression
+    | argument_list ',' expression
+    ;
+
+expression
+    : NUMBER                                /* literal numérico */  
+    | IDENTIFIER                            /* variable o llamada a función */
+    | expression '+' expression             /* suma */  
+    | expression '-' expression             /* resta */  
+    | expression '*' expression             /* multiplicación */  
+    | expression '\' expression             /* división */  
+    | expression '^' expression             /* potencia */  
+    | '(' expression ')'                    /* agrupación */  
+    | LET IDENTIFIER '=' expression IN expression  
+                                            /* let‑in */  
+    | IF '(' expression ')' expression 
+      ( ELIF '(' expression ')' expression )* 
+      ( ELSE expression )?                 /* if/elif/else como expresión */  
+    | WHILE '(' expression ')' expression   /* while como expresión */  
+    | FOR '(' IDENTIFIER IN expression ')' expression  
+                                            /* for‑in como expresión */  
+    | '{' expression_seq '}' ';'?           /* bloque de expresiones */  
+    | IDENTIFIER '(' argument_list? ')'     /* llamada a función (built‑in o user) */  
+    ;
+
+expression_seq
+    : expression
+    | expression_seq ';' expression
+    ;

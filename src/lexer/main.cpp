@@ -22,7 +22,7 @@ int main()
     buffer << file.rdbuf();  
     string code = buffer.str();
 
-    Scanner scanner(code);
+    DFAScanner scanner(code);
 
     vector<Token> tokens = scanner.scanTokens();
 

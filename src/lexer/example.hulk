@@ -1,7 +1,5 @@
 
-
 print("HOla mundo");
-
 let x =10 in if (x>5)
     {
         print("x es mayor que 5");

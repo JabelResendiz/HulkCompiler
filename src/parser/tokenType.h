@@ -2,7 +2,6 @@
 #define TOKEN_TYPE_H
 #include <string>
 
-// tokentype.h
 namespace HULK_LEXER
 {
 

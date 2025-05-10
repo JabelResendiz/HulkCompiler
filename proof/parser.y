@@ -1,3 +1,4 @@
+
 %code requires {
     #include "ast.h"
 }
@@ -18,7 +19,10 @@ ASTNode* root;
 }
 
 %token <num> NUMBER
-%type <node> expr
+%token PRINT IF ELSE
+
+
+%type <node> expr statement statement_list input
 
 %left '+' '-'
 %left '*' '/'
@@ -26,9 +30,20 @@ ASTNode* root;
 %%
 
 input:
-    expr { root = $1; }
+    statement_list { root = $1; }
     ;
 
+statement_list:
+    statement                    {$$ = $1; }
+    | statement_list statement   {$$ = create_seq_node($1,$2); }
+    ;
+
+statement:
+    PRINT expr ';'               {$$ = create_print_node($2); }
+    | IF '(' expr ')' statement ELSE statement  {$$ = create_if_node($3,$5,$7); }
+    | expr ';'                   {$$ = $1; }
+    ;
+    
 expr:
       expr '+' expr   { $$ = create_op_node(AST_ADD, $1, $3); }
     | expr '-' expr   { $$ = create_op_node(AST_SUB, $1, $3); }

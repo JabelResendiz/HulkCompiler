@@ -11,6 +11,12 @@
 ";"        { return ';'; }
 "("        { return '('; }
 ")"        { return ')'; }
+">="       { return GE; }
+"<="        { return LE; }
+"=="        { return EQ; }
+">"         { return GT; }
+"<"         { return LT; }
+
 [0-9]+     { yylval.num = atoi(yytext); return NUMBER; }
 [ \t\n]+   ; // Ignora espacios y tabs
 .          { return yytext[0]; } // Caracteres individuales como + - * /

@@ -187,7 +187,37 @@ void print_ast(ASTNode* node, int indent) {
             print_ast(node->left, indent + 1);
             print_ast(node->right, indent + 1);
             break;
+        
+        case AST_GT:
+            printf("GT\n");
+            print_ast(node->left, indent + 1);
+            print_ast(node->right, indent + 1);
+            break;
+        
+        case AST_LT:
+            printf("LT\n");
+            print_ast(node->left, indent + 1);
+            print_ast(node->right, indent + 1);
+            break;
+        
+        case AST_EQ:
+            printf("EQ\n");
+            print_ast(node->left, indent + 1);
+            print_ast(node->right, indent + 1);
+            break;
 
+        case AST_GE:
+            printf("GE\n");
+            print_ast(node->left, indent + 1);
+            print_ast(node->right, indent + 1);
+            break;
+
+        case AST_LE:
+            printf("LE\n");
+            print_ast(node->left, indent + 1);
+            print_ast(node->right, indent + 1);
+            break;
+        
         case AST_PRINT:
             printf("PRINT\n");
             print_ast(node->left, indent + 1);

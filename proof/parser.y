@@ -20,10 +20,13 @@ ASTNode* root;
 
 %token <num> NUMBER
 %token PRINT IF ELSE
+%token GT LT EQ GE LE
 
 
 %type <node> expr statement statement_list input
 
+%left EQ
+%left GT LT GE LE
 %left '+' '-'
 %left '*' '/'
 
@@ -43,12 +46,17 @@ statement:
     | IF '(' expr ')' statement ELSE statement  {$$ = create_if_node($3,$5,$7); }
     | expr ';'                   {$$ = $1; }
     ;
-    
+
 expr:
       expr '+' expr   { $$ = create_op_node(AST_ADD, $1, $3); }
     | expr '-' expr   { $$ = create_op_node(AST_SUB, $1, $3); }
     | expr '*' expr   { $$ = create_op_node(AST_MUL, $1, $3); }
     | expr '/' expr   { $$ = create_op_node(AST_DIV, $1, $3); }
+    | expr GT expr    { $$ = create_op_node(AST_GT,  $1, $3); }
+    | expr LT expr    { $$ = create_op_node(AST_LT,  $1, $3); }
+    | expr EQ expr    { $$ = create_op_node(AST_EQ,  $1, $3); }
+    | expr GE expr    { $$ = create_op_node(AST_GE,  $1, $3); }
+    | expr LE expr    { $$ = create_op_node(AST_LE,  $1, $3); }
     | '(' expr ')'    { $$ = $2; }
     | NUMBER          { $$ = create_num_node($1); }
     ;

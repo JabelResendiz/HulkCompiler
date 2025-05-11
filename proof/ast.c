@@ -3,9 +3,10 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "ast.h"
 
-ASTNode *create_num_node(int value)
+ASTNode* create_num_node(int value)
 {
     ASTNode *node = malloc(sizeof(ASTNode));
     node->type = AST_NUM;
@@ -14,7 +15,35 @@ ASTNode *create_num_node(int value)
     return node;
 }
 
-ASTNode *create_op_node(ASTNodeType type,
+ASTNode* create_str_node(const char* str)
+{
+    ASTNode* node = malloc(sizeof(ASTNode));
+    node->type = AST_STR;
+    node->str = strdup(str);
+    node->left = node->right = NULL;
+    return node;
+}
+
+ASTNode* create_var_node(const char* name, ASTNode* value)
+{
+    ASTNode* node = malloc(sizeof(ASTNode));
+    node->type= AST_VAR;
+    node->varname= strdup(name);
+    node->right = value;
+    node->left = node->condition= node->else_branch = NULL;
+    return node;
+}
+
+ASTNode* create_concat_node(ASTNode* left, ASTNode* right)
+{
+    ASTNode* node = malloc(sizeof(ASTNode));
+    node->type = AST_CONCAT;
+    node->left= left;
+    node->right= right;
+    return node;
+}
+
+ASTNode* create_op_node(ASTNodeType type,
                         ASTNode *left,
                         ASTNode *right)
 {
@@ -27,7 +56,7 @@ ASTNode *create_op_node(ASTNodeType type,
     return node;
 }
 
-ASTNode *create_print_node(ASTNode *expr)
+ASTNode* create_print_node(ASTNode *expr)
 {
     ASTNode *node = malloc(sizeof(ASTNode));
     node->type = AST_PRINT;
@@ -36,7 +65,7 @@ ASTNode *create_print_node(ASTNode *expr)
     node->condition = NULL;
     node->else_branch = NULL;
 }
-ASTNode *create_if_node(ASTNode *condition,
+ASTNode* create_if_node(ASTNode *condition,
                         ASTNode *then_branch,
                         ASTNode *else_branch)
 {
@@ -57,101 +86,51 @@ ASTNode* create_seq_node(ASTNode* first,ASTNode* second)
     return node;
 }
 
+
+ASTNode* create_let_node(ASTBinding* bindings, ASTNode* body)
+{
+    ASTNode* node = malloc(sizeof(ASTNode));
+    node->type= AST_LET;
+    node->bindings = bindings;
+    node->body= body;
+    return node;
+}
+
+
+ASTBinding* create_binding(const char* name, ASTNode* value)
+{
+    ASTBinding* binding = malloc(sizeof(ASTBinding));
+    binding->name= strdup(name);
+    binding->value = value;
+    binding->next = NULL;
+    return binding;
+}
+
+ASTBinding*  append_binding(ASTBinding* list, 
+                            ASTBinding* new_binding)
+{
+    if(!list) return new_binding;
+    ASTBinding* current = list;
+    while (current->next)
+        current = current->next;
+    current->next = new_binding;
+    return list;
+}
+
 void free_ast(ASTNode *node)
 {
     if (!node)
         return;
     free_ast(node->left);
     free_ast(node->right);
+    free_ast(node->condition);
+    free_ast(node->else_branch);
+
+    if (node->type == AST_VAR && node->varname)
+        free(node->varname);
+
     free(node);
 }
-
-// void print_ast(ASTNode *node)
-// {
-//     if (!node)
-//         return;
-//     if (node->type == AST_NUM)
-//     {
-//         printf("%d", node->value);
-//     }
-//     else
-//     {
-//         printf("(");
-//         print_ast(node->left);
-//         switch (node->type)
-//         {
-//         case AST_ADD:
-//             printf(" + ");
-//             break;
-//         case AST_SUB:
-//             printf(" - ");
-//             break;
-//         case AST_MUL:
-//             printf(" * ");
-//             break;
-//         case AST_DIV:
-//             printf(" / ");
-//             break;
-        
-//         case 
-
-//         default:
-//             break;
-//         }
-
-//         print_ast(node->right);
-//         printf(")");
-//     }
-// }
-
-
-
-// void print_ast(ASTNode* node) {
-//     if (!node) return;
-
-//     switch (node->type) {
-//         case AST_NUM:
-//             printf("%d", node->value); break;
-
-//         case AST_ADD: case AST_SUB: case AST_MUL: case AST_DIV:
-//             printf("(");
-//             print_ast(node->left);
-//             switch (node->type) {
-//                 case AST_ADD: printf(" + "); break;
-//                 case AST_SUB: printf(" - "); break;
-//                 case AST_MUL: printf(" * "); break;
-//                 case AST_DIV: printf(" / "); break;
-//                 default: break;
-//             }
-//             print_ast(node->right);
-//             printf(")");
-//             break;
-
-//         case AST_PRINT:
-//             printf("print ");
-//             print_ast(node->left);
-//             printf(";");
-//             break;
-
-//         case AST_IF:
-//             printf("if (");
-//             print_ast(node->condition);
-//             printf(") \n");
-//             print_ast(node->left);
-//             printf(" else ");
-//             print_ast(node->else_branch);
-//             break;
-
-//         case AST_SEQ:
-//             print_ast(node->left);
-//             printf("\n");
-//             print_ast(node->right);
-//             break;
-//     }
-// }
-
-
-
 
 
 void print_ast(ASTNode* node, int indent) {
@@ -241,5 +220,22 @@ void print_ast(ASTNode* node, int indent) {
             print_ast(node->left, indent + 1);
             print_ast(node->right, indent + 1);
             break;
+        
+        case AST_LET:
+            printf("LET \n");
+            for (int i=0;i<indent+1;i++) printf(" ");
+            printf("Bindings: \n");
+            print_ast(node->left,indent+2);
+            for (int i=0;i<indent+1;i++) printf(" ");
+            printf("IN: \n");
+            print_ast(node->right,indent+2);
+            break;
+        
+        case AST_VAR:
+            printf("VAR: %s =\n", node->varname? node->varname: "(null)");
+            print_ast(node->right, indent + 1);
+            break;
+
+        default: break;
     }
 }

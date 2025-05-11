@@ -18,12 +18,16 @@ ASTNode* root;
     ASTNode* node;
 }
 
+%token <node> STRING IDENT
 %token <num> NUMBER
 %token PRINT IF ELSE
 %token GT LT EQ GE LE
+%token LET IN CONCAT
 
 
-%type <node> expr statement statement_list input
+%type <node> expr
+%type <node> statement statement_list input
+%type <node> binding binding_list
 
 %left EQ
 %left GT LT GE LE
@@ -59,6 +63,19 @@ expr:
     | expr LE expr    { $$ = create_op_node(AST_LE,  $1, $3); }
     | '(' expr ')'    { $$ = $2; }
     | NUMBER          { $$ = create_num_node($1); }
+    | STRING          { $$ = $1;}
+    | IDENT           { $$ = $1;}
+    | expr CONCAT expr {$$ = create_concat_node($1,$3);}
+    | LET binding_list IN expr   {$$ = create_let_node($2,$4);}
+    ;
+
+binding_list:
+    binding                     {$$ = $1; }
+    | binding_list ',' binding  {$$ = append_binding($1, $3);}
+    ;
+
+binding :
+    IDENT '=' expr {$$ = create_binding($1-> varname , $3); free($1);}
     ;
 
 %%

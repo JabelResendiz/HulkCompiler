@@ -15,10 +15,13 @@ ASTNode* root;
 
 %union {
     int num;
+    char* id;
     ASTNode* node;
 }
 
 %token <num> NUMBER
+%token <id> IDENTIFIER
+%token LET IN
 %token PRINT IF ELSE
 %token GT LT EQ GE LE
 

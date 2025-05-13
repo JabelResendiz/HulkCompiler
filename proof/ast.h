@@ -21,6 +21,14 @@ typedef struct ASTNode {
     struct ASTNode* else_branch;
 } ASTNode;
 
+
+typedef struct VarBinding
+{
+    char* name;
+    struct ASTNode* value;
+    struct VarBinging* next;
+}VarBinding;
+
 ASTNode* create_num_node(int value);
 ASTNode* create_op_node(ASTNodeType type, ASTNode* left, ASTNode* right);
 ASTNode* create_print_node(ASTNode* expr);

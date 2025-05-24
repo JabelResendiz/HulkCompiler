@@ -5,4 +5,4 @@
 
 print(1290);
 
-if (12+2 > 89) then 23 else 13;
+let msg = 12 in print(12);

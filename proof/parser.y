@@ -22,6 +22,7 @@ ASTNode* root;
 
 %token <num> NUMBER
 %token <id> IDENTIFIER
+%token <id> STRING
 %token LET IN
 %token PRINT IF ELSE
 %token GT LT EQ GE LE
@@ -79,7 +80,8 @@ expr:
     | expr LE expr    { $$ = create_op_node(AST_LE,  $1, $3); }
     | '(' expr ')'    { $$ = $2; }
     | NUMBER          { $$ = create_num_node($1); }
-    | IDENTIFIER      { $$ = create_var_node($1) ;}
+    | IDENTIFIER      { $$ = create_var_node($1); }
+    | STRING          { $$ = create_string_node($1); }
     | let_expr        { $$ = $1; }
     ;
 
@@ -89,7 +91,6 @@ let_expr:
 binding_list:
     binding                         {$$ = $1;}
     | binding_list ',' binding      {$$ = append_binding_list($1, $3);}
-
 
 
 binding:

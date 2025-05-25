@@ -26,6 +26,17 @@ ASTNode* create_var_node(char* name)
     return node;
 }
 
+ASTNode* create_string_node(char* value)
+{
+    ASTNode* node = malloc(sizeof(ASTNode));
+    node->type = AST_STRING;
+    node->string_value = strdup(value);
+    node->left = node->right = node->condition = node->else_branch = NULL;
+    node->bindings = NULL;
+    return node;
+
+}
+
 ASTNode *create_op_node(ASTNodeType type,
                         ASTNode *left,
                         ASTNode *right)
@@ -173,6 +184,10 @@ void print_ast(ASTNode *node, int indent)
     
     case AST_VAR:
         printf("Variable: %s\n", node->var_name);
+        break;
+    
+    case AST_STRING:
+        printf("String : %s\n", node->string_value);
         break;
 
     case AST_ADD:

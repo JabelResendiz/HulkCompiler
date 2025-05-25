@@ -6,6 +6,7 @@
 typedef enum {
     AST_NUM,
     AST_VAR,
+    AST_STRING,
     AST_ADD, AST_SUB, AST_MUL, AST_DIV,
     AST_GT, AST_LT, AST_EQ, AST_GE, AST_LE,
     AST_PRINT,
@@ -20,6 +21,7 @@ typedef struct ASTNode {
     union {
         int value;
         char* var_name;
+        char* string_value;
     };
     struct ASTNode* left;
     struct ASTNode* right;
@@ -38,6 +40,7 @@ typedef struct VarBinding
 
 ASTNode* create_num_node(int value);
 ASTNode* create_var_node(char* name);
+ASTNode* create_string_node(char* value);
 ASTNode* create_op_node(ASTNodeType type, ASTNode* left, ASTNode* right);
 ASTNode* create_print_node(ASTNode* expr);
 ASTNode* create_if_node(ASTNode* condition, ASTNode* then_branch, ASTNode* else_branch);

@@ -9,7 +9,9 @@ typedef enum {
     AST_GT, AST_LT, AST_EQ, AST_GE, AST_LE,
     AST_PRINT,
     AST_IF,
-    AST_SEQ
+    AST_SEQ,
+    AST_LET,
+    AST_BINDING
 } ASTNodeType;
 
 typedef struct ASTNode {
@@ -19,14 +21,15 @@ typedef struct ASTNode {
     struct ASTNode* right;
     struct ASTNode* condition;
     struct ASTNode* else_branch;
+    struct VarBinding* bindings;
 } ASTNode;
 
 
 typedef struct VarBinding
 {
     char* name;
-    struct ASTNode* value;
-    struct VarBinging* next;
+    ASTNode* value;
+    struct VarBinding* next;
 }VarBinding;
 
 ASTNode* create_num_node(int value);
@@ -35,7 +38,14 @@ ASTNode* create_print_node(ASTNode* expr);
 ASTNode* create_if_node(ASTNode* condition, ASTNode* then_branch, ASTNode* else_branch);
 ASTNode* create_seq_node(ASTNode* first,ASTNode* second);
 
+
+ASTNode* create_let_node(VarBinding* bindings, ASTNode* body);
+VarBinding* append_binding_list(VarBinding* list,VarBinding* new_binding);
+VarBinding* create_binding(char* name, ASTNode* value);
+
+
 void free_ast(ASTNode* node);
-void print_ast(ASTNode* node, int indent); // Para depuración
+void free_bindings(VarBinding* bindings);
+void print_ast(ASTNode* node, int indent); 
 
 #endif

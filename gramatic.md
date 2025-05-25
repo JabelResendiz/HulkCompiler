@@ -3,13 +3,17 @@ program         → statement_list
 statement_list  → statement
                 | statement_list statement
 
-statement       → print_stmt
-                | if_stmt
+statement       → print_stmt ';'
+                | if_stmt    ';'
                 | expr ';'
 
-print_stmt      → 'print' '(' expr ')' ';'
+statement_2     → print_stmt 
+                | if_stmt
+                | expr
 
-if_stmt         → 'if' '(' expr ')' statement 'else' statement
+print_stmt      → 'print' '(' expr ')' 
+
+if_stmt         → 'if' '(' expr ')' statement_2 'else' statement_2
 
 expr            → expr '+' expr
                 | expr '-' expr
@@ -24,9 +28,9 @@ letExpr         → 'let' binding_list 'in' let_body
 binding_list    → binding
                 | binding_list ',' binding 
 
-binding         → IDENTIFIER '=' expression
+binding         → IDENTIFIER '=' expr
 
-let_body        → expr
+let_body        → statement_2
                 | '{' statement_list '}'
 
 

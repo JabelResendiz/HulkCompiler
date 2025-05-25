@@ -5,4 +5,4 @@
 
 print(1290);
 
-let msg = 12 in print(12);
+let msg = 12 in print(12+78);

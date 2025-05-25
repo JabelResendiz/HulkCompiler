@@ -19,10 +19,12 @@
 ">"         { return GT; }
 "<"         { return LT; }
 
+[a-zA-Z_][a-zA-Z0-9_]* {yylval.id = strdup(yytext); return IDENTIFIER;}
+
 [0-9]+     { yylval.num = atoi(yytext); return NUMBER; }
 [ \t\n]+   ; // Ignora espacios y tabs
 .          { return yytext[0]; } // Caracteres individuales como + - * /
-[a-zA-Z_][a-zA-Z0-9_]* {yylval.id = strdup(yytext); return IDENTIFIER;}
+
 %%
 
 int yywrap() {

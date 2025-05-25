@@ -28,12 +28,14 @@ ASTNode* root;
 
 
 %type <node> expr statement statement_list statement_2 print_stmt if_stmt let_expr let_body input
-%type <bindings> binding_list binding
+%type <bindings> binding
+%type <bindings> binding_list 
 
 %left EQ
 %left GT LT GE LE
 %left '+' '-'
 %left '*' '/'
+
 
 %%
 
@@ -77,6 +79,7 @@ expr:
     | expr LE expr    { $$ = create_op_node(AST_LE,  $1, $3); }
     | '(' expr ')'    { $$ = $2; }
     | NUMBER          { $$ = create_num_node($1); }
+    | IDENTIFIER      { $$ = create_var_node($1) ;}
     | let_expr        { $$ = $1; }
     ;
 
@@ -84,11 +87,13 @@ let_expr:
     LET binding_list IN let_body {$$ = create_let_node($2,$4);}
 
 binding_list:
-    binding                      {$$ = $1; }
-    | binding_list ',' binding   {$$ = append_binding_list($1,$3); }
+    binding                         {$$ = $1;}
+    | binding_list ',' binding      {$$ = append_binding_list($1, $3);}
+
+
 
 binding:
-    IDENTIFIER '='expr {$$ = create_binding($1,$3); }
+    IDENTIFIER '=' expr {$$ = create_binding($1,$3); }
 
 let_body:
     statement_2                   {$$ = $1; }

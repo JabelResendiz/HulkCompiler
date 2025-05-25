@@ -16,6 +16,16 @@ ASTNode *create_num_node(int value)
     return node;
 }
 
+ASTNode* create_var_node(char* name)
+{
+    ASTNode *node = malloc(sizeof(ASTNode));
+    node->type = AST_VAR;
+    node->var_name = strdup(name);
+    node->left = node->right = node->condition = node->else_branch = NULL;
+    node->bindings = NULL;
+    return node;
+}
+
 ASTNode *create_op_node(ASTNodeType type,
                         ASTNode *left,
                         ASTNode *right)
@@ -41,6 +51,7 @@ ASTNode *create_print_node(ASTNode *expr)
     node->bindings = NULL;
     return node;
 }
+
 ASTNode *create_if_node(ASTNode *condition,
                         ASTNode *then_branch,
                         ASTNode *else_branch)
@@ -97,6 +108,8 @@ VarBinding* append_binding_list(VarBinding* list, VarBinding* new_binding)
 
     while(current->next)
         current = current->next;
+    
+        
     
     current->next = new_binding;
 
@@ -156,6 +169,10 @@ void print_ast(ASTNode *node, int indent)
     {
     case AST_NUM:
         printf("NUM: %d\n", node->value);
+        break;
+    
+    case AST_VAR:
+        printf("Variable: %s\n", node->var_name);
         break;
 
     case AST_ADD:

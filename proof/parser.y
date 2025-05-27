@@ -72,7 +72,7 @@ if_stmt:
 expr:
       expr '+' expr   { $$ = create_op_node(AST_ADD, $1, $3); }
     | expr '-' expr   { $$ = create_op_node(AST_SUB, $1, $3); }
-    | expr '@' expr   { $$ = create_op_node(AST_CONCAT,$1,$3); }
+    | expr '@' expr   { $$ = create_op_node(AST_CONCAT,$1,$3);}
     | expr '*' expr   { $$ = create_op_node(AST_MUL, $1, $3); }
     | expr '/' expr   { $$ = create_op_node(AST_DIV, $1, $3); }
     | expr GT expr    { $$ = create_op_node(AST_GT,  $1, $3); }

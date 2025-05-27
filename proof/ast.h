@@ -7,7 +7,7 @@ typedef enum {
     AST_NUM,
     AST_VAR,
     AST_STRING,
-    AST_ADD, AST_SUB, AST_MUL, AST_DIV,
+    AST_ADD, AST_SUB, AST_MUL, AST_DIV, AST_CONCAT,
     AST_GT, AST_LT, AST_EQ, AST_GE, AST_LE,
     AST_PRINT,
     AST_IF,

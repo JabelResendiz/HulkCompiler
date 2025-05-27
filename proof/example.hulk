@@ -29,3 +29,5 @@ print(let x=90 in x);
 print(89);
 
 print("hola mundo");
+
+let x = "hola mundo", y = 12 in print(x@(y@12));

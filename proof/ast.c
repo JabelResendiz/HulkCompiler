@@ -197,6 +197,10 @@ void print_ast(ASTNode *node, int indent)
     case AST_SUB:
         printf("SUB\n");
         goto binary;
+    
+    case AST_CONCAT:
+        printf("CONCAT\n");
+        goto binary;
 
     case AST_MUL:
         printf("MUL\n");

@@ -1,53 +1,15 @@
 
-// // main.c
-
-// #include <stdio.h>
-// #include <stdlib.h>
-// #include "ast.h"
-
-// extern int yyparse();
-// extern ASTNode* root;
-
-// int main() {
-//     char* line = NULL;
-//     size_t len = 0;
-
-//     printf("Enter expression:\n");
-
-//     int read = getline(&line, &len, stdin);
-//     if (read == -1) {
-//         perror("Error reading input");
-//         return 1;
-//     }
-
-//     // Pasar la expresión a yylex y yyparse
-//     yy_scan_string(line);  
-//     int parse_result = yyparse(); 
-
-//     // Si no hubo error y el árbol fue generado, imprimir el AST
-//     if (parse_result == 0 && root != NULL) {
-//         printf("AST Structure :\n");
-//         print_ast(root,0);
-//         free_ast(root);  
-//     } else {
-//         printf("Parsing failed or no valid AST generated.\n");
-//     }
-
-//     free(line);  
-
-//     return 0;
-// }
-
-
-
 // main.c
 
 #include <stdio.h>
 #include <stdlib.h>
 #include "ast.h"
+#include "env.h"
+#include "eval.h"
 
 extern int yyparse();
 extern ASTNode* root;
+extern void yy_scan_string(const char*);
 
 int main() {
     // Abrir el archivo "example.hulk" en el mismo directorio
@@ -82,15 +44,28 @@ int main() {
 
     // Si no hubo error y el árbol fue generado, imprimir el AST
     if (parse_result == 0 && root != NULL) {
-        printf("AST Structure :\n");
+        printf("AST Structure:\n");
         print_ast(root, 0);
-        free_ast(root);  // Liberar el árbol AST
+
+        // Crear entorno global y evaluar
+        Env* global_env = create_env(NULL);
+        ASTNode* result = eval(root, global_env);
+
+        printf("\nEvaluated Result: ");
+        if (result != NULL) {
+            print_ast(result, 0);  // O print_value(result), si usas Value*
+        } else {
+            printf("Evaluation returned NULL.\n");
+        }
+
+        free_ast(result);     // Liberar resultado evaluado
+        free_ast(root);       // Liberar AST original
+        free_env(global_env); // Liberar entorno
     } else {
         printf("Parsing failed or no valid AST generated.\n");
     }
 
-    free(line);  // Liberar la memoria utilizada para el contenido del archivo
-
+    free(line); // Liberar memoria del archivo leído
     return 0;
 }
 

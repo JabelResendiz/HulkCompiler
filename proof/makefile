@@ -6,8 +6,8 @@ CFLAGS = -Wall -g
 LFLAGS = -lfl
 
 # Archivos fuente
-SRC_FILES = parser.y lexer.l ast.c main.c
-OBJ_FILES = parser.tab.c lex.yy.c ast.o main.o
+SRC_FILES = parser.y lexer.l ast.c env.c eval.c main.c
+OBJ_FILES = parser.tab.c lex.yy.c ast.o env.o eval.o main.o
 EXEC = compilador
 
 # Regla principal: construir el ejecutable
@@ -18,7 +18,7 @@ $(EXEC): $(OBJ_FILES)
 	$(CC) $(CFLAGS) -o $(EXEC) $(OBJ_FILES) $(LFLAGS)
 
 # Regla para generar el archivo parser.tab.c con Bison
-parser.tab.c: parser.y
+parser.tab.c parser.tab.h : parser.y
 	$(BISON) -d parser.y
 
 # Regla para generar el archivo lex.yy.c con Flex
@@ -28,6 +28,12 @@ lex.yy.c: lexer.l
 # Reglas para compilar los archivos fuente C
 ast.o: ast.c
 	$(CC) $(CFLAGS) -c ast.c
+
+env.o: env.c 
+	$(CC) $(CFLAGS) -c env.c
+
+eval.o: eval.c 
+	$(CC) $(CFLAGS) -c eval.c
 
 main.o: main.c
 	$(CC) $(CFLAGS) -c main.c

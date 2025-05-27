@@ -51,7 +51,7 @@ extern ASTNode* root;
 
 int main() {
     // Abrir el archivo "example.hulk" en el mismo directorio
-    FILE *file = fopen("example.hulk", "r");
+    FILE *file = fopen("decl.hulk", "r");
     if (file == NULL) {
         perror("Error opening file");
         return 1;

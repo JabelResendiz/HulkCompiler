@@ -168,6 +168,8 @@ void print_bindings(VarBinding* bindings, int indent)
         copy_bindings = copy_bindings->next;
     }
 }
+
+
 void print_ast(ASTNode *node, int indent)
 {
     if (!node)

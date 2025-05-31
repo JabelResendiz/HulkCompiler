@@ -11,30 +11,32 @@ ASTNode *create_num_node(int value)
     ASTNode *node = malloc(sizeof(ASTNode));
     node->type = AST_NUM;
     node->value = value;
+    node->ref_count = 1;
     node->left = node->right = node->condition = node->else_branch = NULL;
     node->bindings = NULL;
     return node;
 }
 
-ASTNode* create_var_node(char* name)
+ASTNode *create_var_node(char *name)
 {
     ASTNode *node = malloc(sizeof(ASTNode));
     node->type = AST_VAR;
     node->var_name = strdup(name);
+    node->ref_count = 1;
     node->left = node->right = node->condition = node->else_branch = NULL;
     node->bindings = NULL;
     return node;
 }
 
-ASTNode* create_string_node(char* value)
+ASTNode *create_string_node(char *value)
 {
-    ASTNode* node = malloc(sizeof(ASTNode));
+    ASTNode *node = malloc(sizeof(ASTNode));
     node->type = AST_STRING;
     node->string_value = strdup(value);
+    node->ref_count = 1;
     node->left = node->right = node->condition = node->else_branch = NULL;
     node->bindings = NULL;
     return node;
-
 }
 
 ASTNode *create_op_node(ASTNodeType type,
@@ -43,6 +45,7 @@ ASTNode *create_op_node(ASTNodeType type,
 {
     ASTNode *node = malloc(sizeof(ASTNode));
     node->type = type;
+    node->ref_count = 1;
     node->left = left;
     node->right = right;
     node->condition = node->else_branch = NULL;
@@ -55,6 +58,7 @@ ASTNode *create_print_node(ASTNode *expr)
 {
     ASTNode *node = malloc(sizeof(ASTNode));
     node->type = AST_PRINT;
+    node->ref_count = 1;
     node->left = expr;
     node->right = NULL;
     node->condition = NULL;
@@ -69,6 +73,7 @@ ASTNode *create_if_node(ASTNode *condition,
 {
     ASTNode *node = malloc(sizeof(ASTNode));
     node->type = AST_IF;
+    node->ref_count = 1;
     node->condition = condition;
     node->left = then_branch;
     node->else_branch = else_branch;
@@ -81,6 +86,7 @@ ASTNode *create_seq_node(ASTNode *first, ASTNode *second)
 {
     ASTNode *node = malloc(sizeof(ASTNode));
     node->type = AST_SEQ;
+    node->ref_count = 1;
     node->left = first;
     node->right = second;
     node->condition = NULL;
@@ -93,6 +99,7 @@ ASTNode *create_let_node(VarBinding *bindings, ASTNode *body)
 {
     ASTNode *node = malloc(sizeof(ASTNode));
     node->type = AST_LET;
+    node->ref_count = 1;
     node->bindings = bindings;
     node->left = body;
     node->right = node->condition = node->else_branch = NULL;
@@ -101,54 +108,94 @@ ASTNode *create_let_node(VarBinding *bindings, ASTNode *body)
 
 // Funciones para VarBindings
 
-VarBinding* create_binding(char* name, ASTNode* value)
+VarBinding *create_binding(char *name, ASTNode *value)
 {
-    VarBinding* binding = malloc(sizeof(VarBinding));
+    VarBinding *binding = malloc(sizeof(VarBinding));
     binding->name = strdup(name);
     binding->value = value;
     binding->next = NULL;
     return binding;
-    
 }
 
-VarBinding* append_binding_list(VarBinding* list, VarBinding* new_binding)
+VarBinding *append_binding_list(VarBinding *list, VarBinding *new_binding)
 {
-    if(!list) return new_binding;
+    if (!list)
+        return new_binding;
 
-    VarBinding* current = list;
+    VarBinding *current = list;
 
-    while(current->next)
+    while (current->next)
         current = current->next;
-    
-        
-    
+
     current->next = new_binding;
 
     return list;
 }
+
+// void free_ast(ASTNode *node)
+// {
+//     if (!node)
+//         return;
+
+//     if (node->type == AST_LET)
+//     {
+//         free_bindings(node->bindings);
+//         free_ast(node->left);
+//     }
+//     else
+//     {
+//         free_ast(node->left);
+//         free_ast(node->right);
+//         free_ast(node->condition);
+//         free_ast(node->else_branch);
+//     }
+//     free(node);
+// }
+
+
 
 void free_ast(ASTNode *node)
 {
     if (!node)
         return;
 
-    if (node->type == AST_LET) {
-        free_bindings(node->bindings);
-        free_ast(node->left);
-    } else {
-        free_ast(node->left);
-        free_ast(node->right);
-        free_ast(node->condition);
-        free_ast(node->else_branch);
+    release(node->left);
+    release(node->right);
+    release(node->condition);
+    release(node->else_branch);
+
+    if (node->type == AST_STRING && node->string_value)
+    {
+        free(node->string_value);
     }
+
+    if (node->type == AST_VAR && node->var_name)
+    {
+        free(node->var_name);
+    }
+
+    if (node->type == AST_LET || node->bindings)
+    {
+        VarBinding *b = node->bindings;
+        while (b)
+        {
+            VarBinding *next = b->next;
+            free(b->name);
+            release(b->value);
+            free(b);
+            b = next;
+        }
+    }
+
     free(node);
 }
 
+
 void free_bindings(VarBinding *bindings)
 {
-    while(bindings)
+    while (bindings)
     {
-        VarBinding* next = bindings->next;
+        VarBinding *next = bindings->next;
         free(bindings->name);
         free_ast(bindings->value);
         free(bindings);
@@ -156,19 +203,18 @@ void free_bindings(VarBinding *bindings)
     }
 }
 
-
-void print_bindings(VarBinding* bindings, int indent)
+void print_bindings(VarBinding *bindings, int indent)
 {
-    VarBinding* copy_bindings =  bindings;
-    while(copy_bindings)
+    VarBinding *copy_bindings = bindings;
+    while (copy_bindings)
     {
-        for(int i=0;i<indent;i++) printf(" ");
+        for (int i = 0; i < indent; i++)
+            printf(" ");
         printf("Binding: %s = \n", copy_bindings->name);
-        print_ast(copy_bindings->value, indent +1);
+        print_ast(copy_bindings->value, indent + 1);
         copy_bindings = copy_bindings->next;
     }
 }
-
 
 void print_ast(ASTNode *node, int indent)
 {
@@ -183,11 +229,11 @@ void print_ast(ASTNode *node, int indent)
     case AST_NUM:
         printf("NUM: %d\n", node->value);
         break;
-    
+
     case AST_VAR:
         printf("Variable: %s\n", node->var_name);
         break;
-    
+
     case AST_STRING:
         printf("String : %s\n", node->string_value);
         break;
@@ -199,7 +245,7 @@ void print_ast(ASTNode *node, int indent)
     case AST_SUB:
         printf("SUB\n");
         goto binary;
-    
+
     case AST_CONCAT:
         printf("CONCAT\n");
         goto binary;
@@ -256,23 +302,41 @@ void print_ast(ASTNode *node, int indent)
     case AST_SEQ:
         printf("SEQ\n");
         goto binary;
-    
+
     case AST_LET:
         printf("LET:\n");
         print_bindings(node->bindings, indent + 1);
-        for (int i = 0; i < indent; i++) printf("  ");
+        for (int i = 0; i < indent; i++)
+            printf("  ");
         printf("Body:\n");
         print_ast(node->left, indent + 1);
         break;
-    
 
     binary:
-        print_ast(node->left,indent+1);
-        print_ast(node->right,indent+1);
+        print_ast(node->left, indent + 1);
+        print_ast(node->right, indent + 1);
         break;
 
     default:
         printf("Unknown AST node type\n");
+    }
+}
 
+void retain(ASTNode *node)
+{
+    if (node)
+        node->ref_count++;
+}
+
+void release(ASTNode *node)
+{
+    if (!node)
+        return;
+
+    node->ref_count--;
+
+    if (node->ref_count <= 0)
+    {
+        free_ast(node);
     }
 }

@@ -12,7 +12,6 @@ extern ASTNode* root;
 extern void yy_scan_string(const char*);
 
 int main() {
-    // Abrir el archivo "example.hulk" en el mismo directorio
     FILE *file = fopen("decl.hulk", "r");
     if (file == NULL) {
         perror("Error opening file");
@@ -58,7 +57,7 @@ int main() {
             printf("Evaluation returned NULL.\n");
         }
 
-        free_ast(result);     // Liberar resultado evaluado
+        if(result!=root) free_ast(result);
         free_ast(root);       // Liberar AST original
         free_env(global_env); // Liberar entorno
     } else {

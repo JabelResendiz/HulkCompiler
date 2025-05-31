@@ -18,6 +18,7 @@ typedef enum {
 
 typedef struct ASTNode {
     ASTNodeType type;
+    int ref_count; // SE PODRA BORRAR DESPUES
     union {
         int value;
         char* var_name;
@@ -55,5 +56,9 @@ VarBinding* create_binding(char* name, ASTNode* value);
 void free_ast(ASTNode* node);
 void free_bindings(VarBinding* bindings);
 void print_ast(ASTNode* node, int indent); 
+
+
+void retain(ASTNode* node);
+void release(ASTNode* node);
 
 #endif

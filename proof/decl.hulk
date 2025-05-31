@@ -1,9 +1,7 @@
 
+12 * 9;
 
-let f = 12 in (
-    let g = 90 in (
-        let h =90 in print(f+g+h)
-    )
-);
+12 * (8+9);
 
-print(89);
+print(1290);
+

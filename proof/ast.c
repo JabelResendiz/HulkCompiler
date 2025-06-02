@@ -28,6 +28,7 @@ ASTNode *create_var_node(char *name)
     node->ref_count = 1;
     node->left = node->right = node->condition = node->else_branch = NULL;
     node->bindings = NULL;
+    node->accept =  visit_var;
     return node;
 }
 
@@ -39,6 +40,7 @@ ASTNode *create_string_node(char *value)
     node->ref_count = 1;
     node->left = node->right = node->condition = node->else_branch = NULL;
     node->bindings = NULL;
+    node->accept =  visit_string;
     return node;
 }
 
@@ -50,8 +52,12 @@ ASTNode *create_op_node(ASTNodeType type,
     node->type = type;
     node->ref_count = 1;
     node->left = left;
+    
     node->right = right;
+
+    
     node->condition = node->else_branch = NULL;
+
     node->bindings = NULL;
     
     // fprintf(stderr,"el tipo es : %s\n",type);
@@ -60,10 +66,16 @@ ASTNode *create_op_node(ASTNodeType type,
     {
     case AST_ADD: node->accept = visit_add;break;
     case AST_SUB: node->accept = visit_sub;break;
+    case AST_MUL: node->accept = visit_mul;break;
+    case AST_DIV: node->accept = visit_div;break;
+    case AST_CONCAT: node->accept = visit_concat;break;
     default:  
-        node->accept = visit_add;
+        fprintf(stderr, "ERROR: Unrecognized ASTNodeType in create_op_node: %d\n", type);
+        node->accept = NULL; 
         break;
     }
+
+
     return node;
 }
 
@@ -77,6 +89,7 @@ ASTNode *create_print_node(ASTNode *expr)
     node->condition = NULL;
     node->else_branch = NULL;
     node->bindings = NULL;
+    node->accept = visit_print; 
     return node;
 }
 
@@ -92,6 +105,7 @@ ASTNode *create_if_node(ASTNode *condition,
     node->else_branch = else_branch;
     node->bindings = NULL;
     node->right = NULL;
+    node->accept = visit_if;
     return node;
 }
 
@@ -117,6 +131,7 @@ ASTNode *create_let_node(VarBinding *bindings, ASTNode *body)
     node->bindings = bindings;
     node->left = body;
     node->right = node->condition = node->else_branch = NULL;
+    node->accept = visit_let;
     return node;
 }
 

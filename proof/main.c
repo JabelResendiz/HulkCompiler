@@ -49,20 +49,26 @@ int main()
     if (parse_result == 0 && root != NULL)
     {
         printf("AST Structure:\n");
+
         print_ast(root, 0);
 
         // Crear entorno global y evaluar
+
         Env *global_env = create_env(NULL);
 
-        fprintf(stderr,"candelaaaa\n");
+        
+
         // 1. Crear visitor de chequeo de tipos
+
         ASTVisitor typechecker = make_typechecker(global_env, NULL); // NULL = logger por defecto
         
-        fprintf(stderr,"candelaaaa\n");
-        // 2. Aplicar el visitor
-        ValueType result_type = root->accept(root, &typechecker);
+       
 
-        fprintf(stderr,"candelaaaa\n");
+        // 2. Aplicar el visitor
+
+        ValueType result_type = root->accept(&typechecker,root);
+
+       
 
         if (result_type == TYPE_UNKNOWN)
         {
@@ -75,7 +81,6 @@ int main()
 
         ASTNode *result = eval(root, global_env);
         
-
         printf("\nEvaluated Result: ");
         if (result != NULL)
         {

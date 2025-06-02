@@ -35,7 +35,8 @@ typedef struct ASTNode {
     struct ASTNode* else_branch;
     struct VarBinding* bindings;
 
-    ValueType (*accept)(struct ASTNode*,ASTVisitor*);
+    ValueType (*accept)(ASTVisitor*, struct ASTNode*);
+
 } ASTNode;
 
 

@@ -3,6 +3,8 @@
 #ifndef AST_H
 #define AST_H
 
+#include "types.h"
+#include "visitor.h"
 typedef enum {
     AST_NUM,
     AST_VAR,
@@ -19,6 +21,9 @@ typedef enum {
 typedef struct ASTNode {
     ASTNodeType type;
     int ref_count; // SE PODRA BORRAR DESPUES
+
+    ValueType computed_type;
+
     union {
         int value;
         char* var_name;
@@ -29,6 +34,8 @@ typedef struct ASTNode {
     struct ASTNode* condition;
     struct ASTNode* else_branch;
     struct VarBinding* bindings;
+
+    ValueType (*accept)(struct ASTNode*,ASTVisitor*);
 } ASTNode;
 
 

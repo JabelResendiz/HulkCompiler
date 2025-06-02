@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <string.h>
 #include "ast.h"
+#include "types.h"
+#include "visitor.h"
 
 ASTNode *create_num_node(int value)
 {
@@ -14,6 +16,7 @@ ASTNode *create_num_node(int value)
     node->ref_count = 1;
     node->left = node->right = node->condition = node->else_branch = NULL;
     node->bindings = NULL;
+    node->accept =  visit_num;
     return node;
 }
 
@@ -50,7 +53,17 @@ ASTNode *create_op_node(ASTNodeType type,
     node->right = right;
     node->condition = node->else_branch = NULL;
     node->bindings = NULL;
+    
+    // fprintf(stderr,"el tipo es : %s\n",type);
 
+    switch (type)
+    {
+    case AST_ADD: node->accept = visit_add;break;
+    case AST_SUB: node->accept = visit_sub;break;
+    default:  
+        node->accept = visit_add;
+        break;
+    }
     return node;
 }
 
@@ -92,6 +105,7 @@ ASTNode *create_seq_node(ASTNode *first, ASTNode *second)
     node->condition = NULL;
     node->else_branch = NULL;
     node->bindings = NULL;
+    node->accept = visit_seq;
     return node;
 }
 

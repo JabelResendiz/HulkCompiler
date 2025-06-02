@@ -5,7 +5,10 @@
 #ifndef ENV_H
 #define ENV_H
 
-#include "ast.h"
+// #include "ast.h"
+
+struct ASTNode;
+typedef struct ASTNode ASTNode;
 
 typedef struct EnvEntry 
 {

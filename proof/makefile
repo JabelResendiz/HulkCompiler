@@ -6,8 +6,8 @@ CFLAGS = -Wall -g
 LFLAGS = -lfl
 
 # Archivos fuente
-SRC_FILES = parser.y lexer.l ast.c env.c eval.c main.c
-OBJ_FILES = parser.tab.c lex.yy.c ast.o env.o eval.o main.o
+SRC_FILES = parser.y lexer.l ast.c env.c typecheck.c eval.c main.c 
+OBJ_FILES = parser.tab.c lex.yy.c ast.o env.o typecheck.o eval.o main.o
 EXEC = compilador
 
 # Regla principal: construir el ejecutable
@@ -31,6 +31,9 @@ ast.o: ast.c
 
 env.o: env.c 
 	$(CC) $(CFLAGS) -c env.c
+
+typecheck.o: typecheck.c 
+	$(CC) $(CFLAGS) -c typecheck.c
 
 eval.o: eval.c 
 	$(CC) $(CFLAGS) -c eval.c

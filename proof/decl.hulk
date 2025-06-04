@@ -1,2 +1,2 @@
-let x = 10 in x;
+let x = 10,y =90 in let z = x+y in let c = 12 +x-z in z*c;
 

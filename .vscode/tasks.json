@@ -1,0 +1,25 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "gcc",
+            "args": [
+                "-g",
+                "-o", "${workspaceFolder}/proof/compilador",
+                "${workspaceFolder}/proof/main.c",
+                "${workspaceFolder}/proof/env.c",
+                "${workspaceFolder}/proof/ast.c",
+                "${workspaceFolder}/proof/eval.c",
+                "${workspaceFolder}/proof/typecheck.c",
+                "-I${workspaceFolder}/proof"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        }
+    ]
+}

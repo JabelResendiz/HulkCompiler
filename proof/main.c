@@ -54,36 +54,50 @@ int main()
 
         // Crear entorno global y evaluar
 
-        Env *global_env = create_env(NULL);
+        // fprintf(stderr,"VAMOS A CREA MI ENTORNO NULO\n");
 
-        // 1. Crear visitor de chequeo de tipos
+        // Env *global_env = create_env(NULL);
 
-        ASTVisitor typechecker = make_typechecker(global_env, NULL); // NULL = logger por defecto
-        
-        // 2. Aplicar el visitor
+        // fprintf(stderr,"SE CERRO MI ENTORNO NULO\n");
 
-        ValueType result_type = root->accept(&typechecker,root);
-        fprintf(stderr,"Se va a imprimir el arbol\n");
-        
-        //print_env(global_env); 
-        
-        fprintf(stderr,"Se va a imprimir el arbol23\n");
-        
-        //free_env(global_env);
+        //  1. Crear visitor de chequeo de tipos
 
-        if (result_type == TYPE_UNKNOWN)
-        {
-            fprintf(stderr, "Type checking failed. Aborting evaluation.\n");
-            free_ast(root);
-            free_env(global_env);
-            free(line);
-            return 1;
-        }
+        // // ASTVisitor typechecker = make_typechecker(global_env, NULL); // NULL = logger por defecto
 
+        //  // 2. Aplicar el visitor
+
+        // ValueType result_type = root->accept(&typechecker, root);
+
+
+
+        // fprintf(stderr, "Se va a imprimir el arbol\n");
+
+        // fprintf(stderr, "Dirección de global_env: %p\n", (void*)global_env);
+
+
+        // //free_env_shallow(global_env);
         
-        ASTNode *result = eval(root, global_env);
         
-        fprintf(stderr,"abajo\n");
+
+        // fprintf(stderr, "Se va a imprimir el arbol23\n");
+
+        // free_env(global_env);
+
+        // if (result_type == TYPE_UNKNOWN)
+        // {
+        //     fprintf(stderr, "Type checking failed. Aborting evaluation.\n");
+        //     free_ast(root);
+        //     free_env(global_env);
+        //     free(line);
+        //     return 1;
+        // }
+
+
+        Env* new_global_env = create_env(NULL);
+
+        ASTNode *result = eval(root, new_global_env);
+
+        fprintf(stderr, "abajo\n");
 
         printf("\nEvaluated Result: ");
         if (result != NULL)
@@ -95,14 +109,23 @@ int main()
             printf("Evaluation returned NULL.\n");
         }
 
-        if (result != root)free_ast(result);
-        free_ast(root);       // Liberar AST original
-        fprintf(stderr,"BASASASASASAS\n");
+        fprintf(stderr, "BASASASASASAS\n");
+        //free_env_shallow(new_global_env); // Liberar entorno
 
-        //print_env(global_env);
+        fprintf(stderr, "BASASASASASAS\n");
 
-        free_env_shallow(global_env); // Liberar entorno
-        fprintf(stderr,"BASASASASASAS\n");
+
+        
+        if (result != root)
+            free_ast(result);
+        
+        
+        free_ast(root); // Liberar AST original
+        
+        //free_env_shallow(new_global_env);
+
+       
+        
     }
     else
     {

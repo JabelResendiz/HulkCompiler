@@ -127,18 +127,18 @@ ValueType visit_let(ASTVisitor *v, ASTNode *node)
 {
     Env *local = create_env(v->env);
 
-    Env*l = create_env(v->env);
+    // Env *l = v->env;
 
-    while(l)
-    {
-        fprintf(stderr,"asldklskdl\n");
-        if(l->entries)
-        {
-            fprintf(stderr,"asdasdas %s\n", l->entries->name);
-        }
+    // while(l)
+    // {
+    //     fprintf(stderr,"asldklskdl\n");
+    //     if(l->entries)
+    //     {
+    //         fprintf(stderr,"asdasdas %s\n", l->entries->name);
+    //     }
         
-        l = l->parent;
-    }
+    //     l = l->parent;
+    // }
 
 
     VarBinding *b = node->bindings;
@@ -154,19 +154,20 @@ ValueType visit_let(ASTVisitor *v, ASTNode *node)
         fprintf(stderr,"Mi valor es %d\n", b->value->value);
 
         env_add(local, b->name, b->value);
+
         print_env(local); 
         
         b = b->next;
         
     }
 
-    VarBinding *d = node->bindings;
+    // VarBinding *d = node->bindings;
 
-    while (d)
-    {
-        fprintf(stderr, "El tipo del bindings18 es : %s: %d\n", d->name, d->value->type);
-        d = d->next;
-    }
+    // while (d)
+    // {
+    //     fprintf(stderr, "El tipo del bindings18 es : %s: %d\n", d->name, d->value->type);
+    //     d = d->next;
+    // }
 
 
     ASTVisitor inner = *v;
@@ -176,15 +177,19 @@ ValueType visit_let(ASTVisitor *v, ASTNode *node)
     fprintf(stderr, "MI NODO ES DE VALUETYPE: %d\n", result);
 
     
-    VarBinding *c = node->bindings;
+    // VarBinding *c = node->bindings;
 
-    while (c)
-    {
-        fprintf(stderr, "El tipo del bindings23 es : %s: %d\n", c->name, c->value->type);
-        c = c->next;
-    }
+    // while (c)
+    // {
+    //     fprintf(stderr, "El tipo del bindings23 es : %s: %d\n", c->name, c->value->type);
+    //     c = c->next;
+    // }
 
-    free_env_shallow(local);
+    fprintf(stderr, "Antes de liberar local, su parent es: %p\n", (void*)local->parent);
+
+    //free_env_shallow(local);
+
+    fprintf(stderr, "Después de liberar local\n");
 
 
     // // Añadimos los bindings al entorno temporal SOLO para type-checking

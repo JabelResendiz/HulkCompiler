@@ -9,21 +9,17 @@
 Env *create_env(Env *parent)
 {
 
-    Env *a = parent;
-
-    while (a)
-    {
-        fprintf(stderr, "a90909090\n");
-        a = a->parent;
-    }
-
     Env *env = malloc(sizeof(Env));
 
-    
+    // Env *a = parent;
+
+    // while (a)
+    // {
+    //     fprintf(stderr, "a90909090\n ");
+    //     a = a->parent;
+    // }
 
     env->entries = NULL;
-
-    
 
     env->parent = parent;
     return env;
@@ -90,9 +86,13 @@ void free_env_shallow(Env *env)
             fprintf(stderr, "ESTAMOS EN AREA RESTINGIDA000000000000000:\n");
             EnvEntry *next = entry->next;
 
-            fprintf(stderr, "ESTAMOS EN AREA RESTINGIDA:  %s\n", entry->name);
-            free(entry->name);
-            free(entry);
+            if (entry->name)
+            {
+                fprintf(stderr, "ESTAMOS EN AREA RESTINGIDA:  %s\n", entry->name);
+                free(entry->name);
+            }
+
+           free(entry);
 
             entry = next;
         }
@@ -114,14 +114,9 @@ void print_env(Env *env)
 
         EnvEntry *entry = a->entries;
 
-        if (entry)
-        {
-            fprintf(stderr, "=== Env Name %s ===\n", entry->name);
-        }
-
         while (entry)
         {
-            fprintf(stderr, "  Nombre: %s | Addr: %p | Name Ptr: %p | Value Ptr: %p\n",
+            fprintf(stderr, "  Nombre: %s | Addr: %p | Name Ptr: %p | Value Ptr: %p\n ",
                     entry->name,
                     (void *)entry,
                     (void *)entry->name,

@@ -12,13 +12,13 @@ ASTNode *eval(ASTNode *node, Env *env)
         return NULL;
 
 
-    VarBinding *c = node->bindings;
+    // VarBinding *c = node->bindings;
 
-    while (c)
-    {
-        fprintf(stderr, "El tipo del bindings 89 es : %s: %d\n", c->name, c->value->type);
-        c = c->next;
-    }
+    // while (c)
+    // {
+    //     fprintf(stderr, "El tipo del bindings 89 es : %s: %d\n", c->name, c->value->type);
+    //     c = c->next;
+    // }
 
     switch (node->type)
     {
@@ -138,16 +138,8 @@ ASTNode *eval(ASTNode *node, Env *env)
     {
 
         Env *new_env = create_env(env);
+
         VarBinding *b = node->bindings;
-
-        // Env * a = new_env;
-
-        // while(a)
-        // {
-        //     fprintf(stderr,"a90909090\n");
-        //     a = a->parent;
-        // }
-
         
         VarBinding *c = node->bindings;
 
@@ -158,11 +150,10 @@ ASTNode *eval(ASTNode *node, Env *env)
             c = c->next;
         }
 
-        fprintf(stderr,"0000000000000000000000000\n");
-
+       
         
 
-        Env* new_new = create_env(env);
+        //Env* new_new = create_env(env);
 
         // while(new_new)
         // {
@@ -176,7 +167,7 @@ ASTNode *eval(ASTNode *node, Env *env)
 
         // }
         
-        fprintf(stderr,"=====================================");
+        fprintf(stderr,"=====================================\n");
 
         int contador=0;
 
@@ -188,7 +179,7 @@ ASTNode *eval(ASTNode *node, Env *env)
 
             retain(val);
             env_add(new_env, b->name, val);
-            print_env(new_env);
+            //print_env(new_env);
             release(val);
 
             
@@ -200,7 +191,11 @@ ASTNode *eval(ASTNode *node, Env *env)
         fprintf(stderr,"un contador %d\n", contador);
 
         ASTNode *result = eval(node->left, new_env);
-        free_env_shallow(new_env);
+
+       
+        //free_env_shallow(new_env);
+
+
         return result;
     }
 

@@ -129,7 +129,11 @@ ASTNode *create_let_node(VarBinding *bindings, ASTNode *body)
     node->type = AST_LET;
     node->ref_count = 1;
     node->bindings = bindings;
+    fprintf(stderr,"el valor es : %d\n ",bindings->value->type);
+
     node->left = body;
+    fprintf(stderr,"el valor es : %d\n ",body->type);
+
     node->right = node->condition = node->else_branch = NULL;
     node->accept = visit_let;
     return node;
@@ -143,6 +147,7 @@ VarBinding *create_binding(char *name, ASTNode *value)
     binding->name = strdup(name);
     binding->value = value;
     binding->next = NULL;
+    
     return binding;
 }
 
@@ -362,9 +367,15 @@ void release(ASTNode *node)
     if (!node)
         return;
 
+    if (node->ref_count <= 0) {
+        // Ya fue liberado o es un error
+        fprintf(stderr, "Warning: Trying to release an already freed node.\n");
+        return;
+    }
+
     node->ref_count--;
 
-    if (node->ref_count <= 0)
+    if (node->ref_count == 0)
     {
         free_ast(node);
     }

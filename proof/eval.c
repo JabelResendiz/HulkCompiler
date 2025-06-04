@@ -2,12 +2,23 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "eval.h"
 
 ASTNode *eval(ASTNode *node, Env *env)
 {
+
     if (!node)
         return NULL;
+
+
+    VarBinding *c = node->bindings;
+
+    while (c)
+    {
+        fprintf(stderr, "El tipo del bindings 89 es : %s: %d\n", c->name, c->value->type);
+        c = c->next;
+    }
 
     switch (node->type)
     {
@@ -27,6 +38,8 @@ ASTNode *eval(ASTNode *node, Env *env)
         }
         retain(val);
         return eval(val, env);
+
+        
     }
 
     case AST_ADD:
@@ -80,8 +93,7 @@ ASTNode *eval(ASTNode *node, Env *env)
 
     case AST_CONCAT:
     {
-        fprintf(stderr,"232322323232\n");
-        
+
         ASTNode *left = eval(node->left, env);
         ASTNode *right = eval(node->right, env);
 
@@ -99,10 +111,8 @@ ASTNode *eval(ASTNode *node, Env *env)
         strcpy(result_str, left->string_value);
         strcat(result_str, right->string_value);
 
-        // Crear nodo resultado
         ASTNode *result = create_string_node(result_str);
 
-        // Liberar memoria intermedia si es necesario
         free(result_str);
 
         release(left);
@@ -126,18 +136,71 @@ ASTNode *eval(ASTNode *node, Env *env)
 
     case AST_LET:
     {
+
         Env *new_env = create_env(env);
         VarBinding *b = node->bindings;
+
+        // Env * a = new_env;
+
+        // while(a)
+        // {
+        //     fprintf(stderr,"a90909090\n");
+        //     a = a->parent;
+        // }
+
+        
+        VarBinding *c = node->bindings;
+
+
+        while (c)
+        {
+            fprintf(stderr, "El tipo del bindings19 es : %s: %d\n", c->name, c->value->value);
+            c = c->next;
+        }
+
+        fprintf(stderr,"0000000000000000000000000\n");
+
+        
+
+        Env* new_new = create_env(env);
+
+        // while(new_new)
+        // {
+        //     fprintf(stderr,"999999999");
+        //     if(new_new->entries)
+        //     {
+        //         fprintf(stderr,"askdalskdlaks %s\n",new_new->entries->name);
+        //     }
+            
+        //     new_new = new_new->parent;
+
+        // }
+        
+        fprintf(stderr,"=====================================");
+
+        int contador=0;
+
         while (b)
         {
+            
             ASTNode *val = eval(b->value, env);
+            fprintf(stderr, "asass %d\n", b->value->type);
+
             retain(val);
             env_add(new_env, b->name, val);
+            print_env(new_env);
             release(val);
+
+            
             b = b->next;
+            contador++;
+            
         }
+
+        fprintf(stderr,"un contador %d\n", contador);
+
         ASTNode *result = eval(node->left, new_env);
-        // free_env(new_env);
+        free_env_shallow(new_env);
         return result;
     }
 

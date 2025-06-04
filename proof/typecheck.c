@@ -92,28 +92,28 @@ ValueType visit_div(ASTVisitor *v, ASTNode *node)
 
 ValueType visit_concat(ASTVisitor *v, ASTNode *node)
 {
-    fprintf(stderr,"asdasda\n");
+    fprintf(stderr, "asdasda\n");
 
     ValueType left = node->left->accept(v, node->left);
 
-    fprintf(stderr,"asdasda\n");
+    fprintf(stderr, "asdasda\n");
 
     ValueType right = node->right->accept(v, node->right);
 
-    fprintf(stderr,"asdasda\n");
+    fprintf(stderr, "asdasda\n");
 
     if (left != TYPE_STRING || right != TYPE_STRING)
     {
         v->log_error("CONCAT: Operands must be strings");
         return TYPE_UNKNOWN;
     }
-    fprintf(stderr,"jabel\n");
+    fprintf(stderr, "jabel\n");
     return node->computed_type = TYPE_STRING;
 }
 
 ValueType visit_print(ASTVisitor *v, ASTNode *node)
 {
-    ValueType t = node->left->accept( v,node->left);
+    ValueType t = node->left->accept(v, node->left);
     return node->computed_type = t;
 }
 
@@ -126,19 +126,77 @@ ValueType visit_seq(ASTVisitor *v, ASTNode *node)
 ValueType visit_let(ASTVisitor *v, ASTNode *node)
 {
     Env *local = create_env(v->env);
+
+    Env*l = create_env(v->env);
+
+    while(l)
+    {
+        fprintf(stderr,"asldklskdl\n");
+        if(l->entries)
+        {
+            fprintf(stderr,"asdasdas %s\n", l->entries->name);
+        }
+        
+        l = l->parent;
+    }
+
+
     VarBinding *b = node->bindings;
+
+
     while (b)
     {
+   
         ValueType t = b->value->accept(v, b->value);
+        
         b->value->computed_type = t;
+
+        fprintf(stderr,"Mi valor es %d\n", b->value->value);
+
         env_add(local, b->name, b->value);
+        print_env(local); 
+        
         b = b->next;
+        
     }
+
+    VarBinding *d = node->bindings;
+
+    while (d)
+    {
+        fprintf(stderr, "El tipo del bindings18 es : %s: %d\n", d->name, d->value->type);
+        d = d->next;
+    }
+
 
     ASTVisitor inner = *v;
     inner.env = local;
     ValueType result = node->left->accept(&inner, node->left);
-    free_env(local);
+
+    fprintf(stderr, "MI NODO ES DE VALUETYPE: %d\n", result);
+
+    
+    VarBinding *c = node->bindings;
+
+    while (c)
+    {
+        fprintf(stderr, "El tipo del bindings23 es : %s: %d\n", c->name, c->value->type);
+        c = c->next;
+    }
+
+    free_env_shallow(local);
+
+
+    // // Añadimos los bindings al entorno temporal SOLO para type-checking
+    // b = node->bindings;
+    // while (b) {
+    //     env_add(local, b->name, b->value);  // Importante: añadimos el nodo AST (no evaluado)
+    //     b = b->next;
+    // }
+
+    // ValueType result = node->left->accept(&inner, node->left);
+    // free_env(local);  // Liberamos el entorno temporal
+
     return node->computed_type = result;
 }
 

@@ -56,19 +56,20 @@ int main()
 
         Env *global_env = create_env(NULL);
 
-        
-
         // 1. Crear visitor de chequeo de tipos
 
         ASTVisitor typechecker = make_typechecker(global_env, NULL); // NULL = logger por defecto
         
-       
-
         // 2. Aplicar el visitor
 
         ValueType result_type = root->accept(&typechecker,root);
-
-       
+        fprintf(stderr,"Se va a imprimir el arbol\n");
+        
+        //print_env(global_env); 
+        
+        fprintf(stderr,"Se va a imprimir el arbol23\n");
+        
+        //free_env(global_env);
 
         if (result_type == TYPE_UNKNOWN)
         {
@@ -79,8 +80,11 @@ int main()
             return 1;
         }
 
+        
         ASTNode *result = eval(root, global_env);
         
+        fprintf(stderr,"abajo\n");
+
         printf("\nEvaluated Result: ");
         if (result != NULL)
         {
@@ -91,10 +95,14 @@ int main()
             printf("Evaluation returned NULL.\n");
         }
 
-        if (result != root)
-            free_ast(result);
+        if (result != root)free_ast(result);
         free_ast(root);       // Liberar AST original
-        free_env(global_env); // Liberar entorno
+        fprintf(stderr,"BASASASASASAS\n");
+
+        //print_env(global_env);
+
+        free_env_shallow(global_env); // Liberar entorno
+        fprintf(stderr,"BASASASASASAS\n");
     }
     else
     {

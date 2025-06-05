@@ -1,13 +1,13 @@
 # Variables
 BISON = bison
 FLEX = flex
-CC = gcc
+CC = g++
 CFLAGS = -Wall -g
 LFLAGS = -lfl
 
 # Archivos fuente
-SRC_FILES = parser.y lexer.l ast.c env.c typecheck.c eval.c main.c 
-OBJ_FILES = parser.tab.c lex.yy.c ast.o env.o typecheck.o eval.o main.o
+SRC_FILES = parser.ypp lexer.lpp ast.cpp main.cpp 
+OBJ_FILES = parser.tab.cpp lex.yy.cpp ast.o  main.o
 EXEC = compilador
 
 # Regla principal: construir el ejecutable
@@ -18,28 +18,19 @@ $(EXEC): $(OBJ_FILES)
 	$(CC) $(CFLAGS) -o $(EXEC) $(OBJ_FILES) $(LFLAGS)
 
 # Regla para generar el archivo parser.tab.c con Bison
-parser.tab.c parser.tab.h : parser.y
-	$(BISON) -d parser.y
+parser.tab.cpp parser.tab.h : parser.ypp
+	$(BISON) -d parser.ypp
 
 # Regla para generar el archivo lex.yy.c con Flex
-lex.yy.c: lexer.l
-	$(FLEX) lexer.l
+lex.yy.cpp: lexer.lpp
+	$(FLEX) lexer.lpp
 
 # Reglas para compilar los archivos fuente C
-ast.o: ast.c
-	$(CC) $(CFLAGS) -c ast.c
+ast.o: ast.cpp
+	$(CC) $(CFLAGS) -c ast.cpp
 
-env.o: env.c 
-	$(CC) $(CFLAGS) -c env.c
-
-typecheck.o: typecheck.c 
-	$(CC) $(CFLAGS) -c typecheck.c
-
-eval.o: eval.c 
-	$(CC) $(CFLAGS) -c eval.c
-
-main.o: main.c
-	$(CC) $(CFLAGS) -c main.c
+main.o: main.cpp
+	$(CC) $(CFLAGS) -c main.cpp
 
 # Limpiar los archivos generados
 clean:

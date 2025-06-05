@@ -1,3 +1,2 @@
+let x = 10 ,y =90 in let z = x+y in z*y;
 
-
-2 * (3+5);

@@ -52,45 +52,43 @@ int main()
 
         print_ast(root, 0);
 
-        // Crear entorno global y evaluar
+        //Crear entorno global y evaluar
 
-        // fprintf(stderr,"VAMOS A CREA MI ENTORNO NULO\n");
+        fprintf(stderr,"VAMOS A CREA MI ENTORNO NULO\n");
 
-        // Env *global_env = create_env(NULL);
+        Env *global_env = create_env(NULL);
 
-        // fprintf(stderr,"SE CERRO MI ENTORNO NULO\n");
+        fprintf(stderr,"SE CERRO MI ENTORNO NULO\n");
 
-        //  1. Crear visitor de chequeo de tipos
+        //1. Crear visitor de chequeo de tipos
 
-        // // ASTVisitor typechecker = make_typechecker(global_env, NULL); // NULL = logger por defecto
+         ASTVisitor typechecker = make_typechecker(global_env, NULL); // NULL = logger por defecto
 
-        //  // 2. Aplicar el visitor
+         // 2. Aplicar el visitor
 
-        // ValueType result_type = root->accept(&typechecker, root);
-
-
-
-        // fprintf(stderr, "Se va a imprimir el arbol\n");
-
-        // fprintf(stderr, "Dirección de global_env: %p\n", (void*)global_env);
+        ValueType result_type = root->accept(&typechecker, root);
 
 
-        // //free_env_shallow(global_env);
-        
+
+        fprintf(stderr, "Se va a imprimir el arbol\n");
+
+        fprintf(stderr, "Dirección de global_env: %p\n", (void*)global_env);
+
+
         
 
-        // fprintf(stderr, "Se va a imprimir el arbol23\n");
+        fprintf(stderr, "Se va a imprimir el arbol23\n");
 
-        // free_env(global_env);
+        free_env(global_env);
 
-        // if (result_type == TYPE_UNKNOWN)
-        // {
-        //     fprintf(stderr, "Type checking failed. Aborting evaluation.\n");
-        //     free_ast(root);
-        //     free_env(global_env);
-        //     free(line);
-        //     return 1;
-        // }
+        if (result_type == TYPE_UNKNOWN)
+        {
+            fprintf(stderr, "Type checking failed. Aborting evaluation.\n");
+            free_ast(root);
+            
+            free(line);
+            return 1;
+        }
 
 
         Env* new_global_env = create_env(NULL);
@@ -110,7 +108,7 @@ int main()
         }
 
         fprintf(stderr, "BASASASASASAS\n");
-        //free_env_shallow(new_global_env); // Liberar entorno
+        free_env(new_global_env); // Liberar entorno
 
         fprintf(stderr, "BASASASASASAS\n");
 

@@ -11,15 +11,6 @@ ASTNode *eval(ASTNode *node, Env *env)
     if (!node)
         return NULL;
 
-
-    // VarBinding *c = node->bindings;
-
-    // while (c)
-    // {
-    //     fprintf(stderr, "El tipo del bindings 89 es : %s: %d\n", c->name, c->value->type);
-    //     c = c->next;
-    // }
-
     switch (node->type)
     {
     case AST_NUM:

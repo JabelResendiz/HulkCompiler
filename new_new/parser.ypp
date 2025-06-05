@@ -1,0 +1,141 @@
+
+%skeleton "lalr1.cc"
+%require "3.8"
+%defines
+%define api.namespace {yy}
+%define api.parser.class {Parser}
+%define api.value.type variant
+%define parse.error verbose
+
+%code requires {
+    #include <memory>
+    #include <string>
+    #include "ast/ast.h"
+}
+
+%code {
+    #include "ast/ast.h"
+    #include <iostream>
+    std::unique_ptr<ASTNode> root;
+    void yy::Parser::error(const location_type& l, const std::string& m) {
+        std::cerr << "Error en " << l << ": " << m << std::endl;
+    }
+}
+
+
+%{
+#include <cstdio>
+#include "ast/ast.hpp"
+#include "lexer.hpp"
+    
+extern int yyparse();
+void yyerror(const char *s);
+extern std::unique_ptr<ASTNode> root;
+%}
+
+%token <int> NUMBER
+%token <std::string> IDENTIFIER STRING
+
+%token LET IN
+%token PRINT IF ELSE
+%token GT LT EQ GE LE
+
+%token SEMICOLON
+%token LPAREN RPAREN
+%token LBRACE RBRACE
+%token COMMA
+
+
+%token '+' '-' '*' '/' '@'
+%token ERROR
+
+%type <std::unique_ptr<ASTNode>> expr statement statement_list statement_2 print_stmt if_stmt let_expr let_body input
+%type <std::unique_ptr<VarBinding>> binding
+%type <std::unique_ptr<VarBinding>> binding_list
+
+%left EQ
+%left GT LT GE LE
+%left '+' '-'
+%left '@'
+%left '*' '/'
+
+
+
+
+
+%%
+
+input:
+    statement_list { root = std::move($1); }
+    ;
+
+statement_list:
+    statement                    { $$ = std::move($1); }
+    | statement_list statement   { $$ = create_seq_node(std::move($1), std::move($2)); }
+    ;
+
+statement:
+    print_stmt SEMICOLON               { $$ = std::move($1); }
+    | if_stmt SEMICOLON                { $$ = std::move($1); }
+    | expr SEMICOLON                   { $$ = std::move($1); }
+    ;
+
+statement_2:
+    print_stmt             { $$ = std::move($1); }
+    | if_stmt              { $$ = std::move($1); }
+    | expr                 { $$ = std::move($1); }
+    ;
+
+print_stmt:
+    PRINT LPAREN expr RPAREN    { $$ = create_print_node(std::move($3)); }
+    ;
+
+if_stmt:
+    IF LPAREN expr RPAREN statement_2 ELSE statement_2 
+    { $$ = create_if_node(std::move($3), std::move($5), std::move($7)); }
+    ;
+
+expr:
+    expr '+' expr   { $$ = create_op_node(ASTNodeType::ADD, std::move($1), std::move($3)); }
+    | expr '-' expr   { $$ = create_op_node(ASTNodeType::SUB, std::move($1), std::move($3)); }
+    | expr '@' expr   { $$ = create_op_node(ASTNodeType::CONCAT, std::move($1), std::move($3)); }
+    | expr '*' expr   { $$ = create_op_node(ASTNodeType::MUL, std::move($1), std::move($3)); }
+    | expr '/' expr   { $$ = create_op_node(ASTNodeType::DIV, std::move($1), std::move($3)); }
+    | expr GT expr    { $$ = create_op_node(ASTNodeType::GT, std::move($1), std::move($3)); }
+    | expr LT expr    { $$ = create_op_node(ASTNodeType::LT, std::move($1), std::move($3)); }
+    | expr EQ expr    { $$ = create_op_node(ASTNodeType::EQ, std::move($1), std::move($3)); }
+    | expr GE expr    { $$ = create_op_node(ASTNodeType::GE, std::move($1), std::move($3)); }
+    | expr LE expr    { $$ = create_op_node(ASTNodeType::LE, std::move($1), std::move($3)); }
+    | LPAREN expr RPAREN    { $$ = std::move($2); }
+    | NUMBER          { $$ = create_num_node($1); }
+    | IDENTIFIER      { $$ = create_var_node($1); }
+    | STRING          { $$ = create_string_node($1); }
+    | let_expr        { $$ = std::move($1); }
+    ;
+
+let_expr:
+    LET binding_list IN let_body 
+    { $$ = create_let_node(std::move($2), std::move($4)); }
+    ;
+
+binding_list:
+    binding                         { $$ = std::move($1); }
+    | binding_list COMMA binding    { $$ = append_binding_list(std::move($1), std::move($3)); }
+    ;
+
+binding:
+    IDENTIFIER '=' expr 
+    { $$ = create_binding($1, std::move($3)); }
+    ;
+
+let_body:
+    statement_2                   { $$ = std::move($1); }
+    | LPAREN statement_2 RPAREN   { $$ = std::move($2); }
+    | LBRACE statement_list RBRACE { $$ = std::move($2); }
+    ;
+
+%%
+
+void yy::parser::error(const std::string& msg) {
+    std::cerr << "Syntax error: " << msg << std::endl;
+}

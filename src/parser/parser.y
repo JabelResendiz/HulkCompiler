@@ -75,9 +75,9 @@
 %left POWER
 
 
-%type <node> expr statement let_in_expr
+%type <node> expr statement let_in_expr block_expr 
 %type <node> var
-%type <node> call_function
+%type <node> decl_function call_function
 
 %type <arg_list> assignments args args_not_empty
 

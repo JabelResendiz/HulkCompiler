@@ -28,7 +28,7 @@ typedef struct {
     void (*binary)(ASTVisitor*, ASTNode*);
     //void (*unary)(ASTVisitor*, ASTNode*);
     void (*assignment)(ASTVisitor*, ASTNode*);
-    //void (*function_call)(Visitor*, ASTNode*);
+    void (*call_function)(ASTVisitor*, ASTNode*);
 } ExpressionVisitors;
 
 typedef struct {
@@ -59,7 +59,7 @@ struct ASTVisitor {
 
     // Contexto
     char* current_function;
-    ValueType* current_type;
+    TypeValue* current_type;
 
     // Visitadores
     BasicVisitors basic;

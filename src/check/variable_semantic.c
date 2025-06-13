@@ -40,7 +40,7 @@ void visit_assignment(ASTVisitor* v, ASTNode* node)
     
     accept(v,val_node);
     
-    ValueType inferred_type = resolve_node_type(val_node);
+    TypeValue* inferred_type = resolve_node_type(val_node);
 
 
     scope_add_symbol(node->scope,var_node->data.var_name,inferred_type,val_node);

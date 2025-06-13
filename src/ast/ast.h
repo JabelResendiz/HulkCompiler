@@ -19,7 +19,7 @@ typedef enum {
     AST_PROGRAM,
     AST_BLOCK,
     AST_LET,
-    AST_BINDING
+    AST_CALL_FUNC
 } ASTNodeType;
 
 typedef struct  ASTNode ASTNode;
@@ -27,8 +27,9 @@ typedef struct  ASTNode ASTNode;
 typedef struct ASTNode
 {
     int line;                       // Linea del codigo fuente
+    int checked;
     ASTNodeType type;               // Tipo del nodo
-    ValueType computed_type;       // Tipo del valor del nodo
+    TypeValue* computed_type;       // Tipo del valor del nodo
     Scope* scope;
 
     union 
@@ -93,7 +94,7 @@ ASTNode* create_binary_op_node(Operator op,
                                char* op_name, 
                                ASTNode* left, 
                                ASTNode* right, 
-                               ValueType return_type);
+                               TypeValue* return_type);
 
 ASTNode* create_let_in_node(ASTNode** bindings,
                             int dec_count,
@@ -109,6 +110,7 @@ ASTNode* create_conditional_node(ASTNode* cond,
                                  ASTNode* body,
                                  ASTNode* else_branch);
 
+ASTNode*  create_call_function_node(char* name, ASTNode** args, int arg_count);
 
 void print_ast(ASTNode* node, int indent);
 

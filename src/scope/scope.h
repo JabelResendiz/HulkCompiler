@@ -15,35 +15,42 @@ typedef struct Context Context;
 typedef struct Symbol
 {
     char *name;
-    ValueType type;
+    TypeValue* type;
     Symbol *next;
 } Symbol;
 
 // //Representa una funcion del lenguaje
-// typedef struct Function
-// {
-//     char* name;
-//     int count_args;
-//     ValueType* args_types;
-//     ValueType* result_types;
-//     Function* next;
-// }Function;
+typedef struct Function
+{
+    char* name;
+    int count_args;
+    TypeValue* args_types;
+    TypeValue* result_types;
+    Function* next;
+}Function;
 
 // //Tabla de funcionaes para ver todas las funciones de un entorno
-// typedef struct FuncTable
-// {
-//     Function* first;
-//     int count;
-// }FuncTable;
+typedef struct FuncTable
+{
+    Function* first;
+    int count;
+}FuncTable;
+
+
+typedef struct FuncStructure
+{
+    Function* function;
+    //struct Tuple* tuple_state;
+}FuncStructure;
 
 // TIEMPO DE EJECUCION
 typedef struct Scope
 {
     int s_count;
-    // int t_count;
+    int t_count;
     Symbol *symbols;
-    // FuncTable* functions;
-    // Symbol* defined_types;
+    FuncTable* functions;
+    Symbol* types;  // para los tipos del scope
     Scope *parent;
 } Scope;
 
@@ -51,7 +58,7 @@ typedef struct Scope
 typedef struct ContextItem
 {
     struct ASTNode *declaration;
-    ValueType *return_type;
+    TypeValue *return_type;
     ContextItem *next;
 } ContextItem;
 
@@ -66,11 +73,23 @@ Scope* create_scope(Scope *parent);
 void free_scope(Scope *scope);
 void scope_add_symbol(Scope *scope,
                const char *name,
-               ValueType type,
+               TypeValue* type,
                struct ASTNode *value);
+
+void scope_add_function (Scope* scope,
+                         int arg_count,
+                         TypeValue* args_types,
+                         TypeValue* result_tpyes,
+                         char* name);
+
+void scope_add_type(Scope * scope, TypeValue* type);
 
 Symbol* find_symbol_in_scope(Scope* scope,const char* name);
 Symbol* scope_lookup(Scope* scope,const char* name);
+
+Function* find_function_by_name(Scope* scope,char* name);
+
+void init(Scope* scope);
 
 void free_scope(Scope* scope);
 // void free_symbol(Symbol* symbol);
@@ -78,6 +97,13 @@ void free_scope(Scope* scope);
 // void init(Scope* scope);
 
 
-// void resolve_type_symbol(Scope* scope,ValueType type);
+Symbol* find_type_scopes(Scope* scope, const char* type_name);
+
+FuncStructure* match_function_scope(Scope *scope,Function* f,Function* second);
+
+int compare_functions_signature(Function* f1, Function* f2);
+
+int compare_argument_types(TypeValue** args1, TypeValue** args2,int number_counts);
+
 
 #endif

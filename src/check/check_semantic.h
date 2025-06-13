@@ -18,8 +18,8 @@ void visit_binary_op(ASTVisitor* v, ASTNode* node);
 void visit_let(ASTVisitor* v, ASTNode* node);
 // void visit_conditional(ASTVisitor* v, ASTNode* node);
 void visit_assignment(ASTVisitor* v, ASTNode* node);
+void visit_call_function(ASTVisitor* v, ASTNode* node);
 
-
-ValueType resolve_node_type(ASTNode* node);
+TypeValue* resolve_node_type(ASTNode* node);
 
 #endif

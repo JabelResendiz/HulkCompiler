@@ -36,11 +36,28 @@
 ">"             { return GT; }
 "<"             { return LT; }
 "="             { return EQUALS; }
-
 "if"            { return IF;}
 "else"          { return ELSE;}
 "let"           { return LET; }
 "in"            { return IN; }
+":="            { return DESTRUCTOR; }
+"!="            { return NOT_EQUALS;}
+"!"             { return NOT;}
+"&"             { return AND;}
+"|"             { return OR;}
+"@@"            { return CONCAT_DOUBLE;}
+"@"             { return CONCAT;}
+"PI"            { return PI;}
+"E"             { return E;}
+"function"      { return FUNCTION;}
+"elif"          { return ELIF;}
+"while"         { return WHILE;}
+"as"            { return AS; }
+"is"            { return IS; }
+"type"          { return TYPE; }
+"inherits"      { return INHERITS; }
+"new"           { return NEW; }
+"base"          { return BASE; }
 
 [0-9]+          { yylval.val = atof(yytext); return NUMBER; }
 [0-9]+\.[0-9]+  { yylval.val = atof(yytext); return NUMBER; }

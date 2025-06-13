@@ -19,7 +19,8 @@ void make_checker(ASTNode* node)
         .expr =
         {
             .binary = visit_binary_op,
-            .assignment = visit_assignment
+            .assignment = visit_assignment,
+            .call_function = visit_call_function
         },
          .control =
          {
@@ -39,9 +40,9 @@ void make_checker(ASTNode* node)
 
 
 
-ValueType resolve_node_type(ASTNode* node)
+TypeValue* resolve_node_type(ASTNode* node)
 {
-    ValueType type = node->computed_type;
+    TypeValue* type = node->computed_type;
 
     // cunado permita la creacion de tipos nuevos
     //Symbol* symbol = find_defined_type(node->scope,type);

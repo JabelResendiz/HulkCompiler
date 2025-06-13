@@ -26,7 +26,7 @@ PARSER_DIR = parser
 LLVM_SCOPE_DIR = llvm_scope
 VISITOR_DIR = visitor
 SCOPE_DIR = scope
-# UTILS_DIR = utils
+UTILS_DIR = utils
 
 .PHONY: all compile execute clean debug
 
@@ -44,8 +44,9 @@ $(EXEC): lex.yy.o y.tab.o $(AST_DIR)/ast.o $(AST_DIR)/keyword.o $(SRC_DIR)/main.
     $(LLVM_DIR)/init_codegen.o $(LLVM_DIR)/visitor_llvm.o \
 	$(LLVM_DIR)/codegen.o $(LLVM_SCOPE_DIR)/llvm_scope.o  $(LLVM_DIR)/visitor_llvm.o\
 	$(LLVM_DIR)/llvm_op.o $(LLVM_DIR)/visitor_llvm.o \
-    $(CHECK_DIR)/typecheck.o  $(CHECK_DIR)/variable_semantic.o \
+    $(CHECK_DIR)/typecheck.o  $(CHECK_DIR)/variable_semantic.o $(CHECK_DIR)/function.o\
 	$(CHECK_DIR)/check_semantic.o $(SCOPE_DIR)/scope.o $(VISITOR_DIR)/visitor.o \
+	$(UTILS_DIR)/print_utils.o \
 	$(AST_DIR)/type.o |$(BUILD_DIR)
 
 	@printf "$(CYAN)🔗 Getting ready...$(RESET)\n";
@@ -84,8 +85,8 @@ $(LLVM_DIR)/llvm_op.o: $(LLVM_DIR)/llvm_op.c $(LLVM_DIR)/llvm_op.h $(LLVM_DIR)/v
 $(AST_DIR)/ast.o: $(AST_DIR)/ast.c $(AST_DIR)/ast.h
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-# $(UTILS_DIR)/utils.o: $(UTILS_DIR)/utils.c $(UTILS_DIR)/utils.h
-# 	@$(CC) $(CFLAGS) -c $< -o $@
+$(UTILS_DIR)/print_utils.o: $(UTILS_DIR)/print_utils.c $(UTILS_DIR)/print_utils.h
+	@$(CC) $(CFLAGS) -c $< -o $@
 
 # $(CHECK_DIR)/check_semantic.o: $(CHECK_DIR)/check_semantic.c $(CHECK_DIR)/check_semantic.h $(AST_DIR)/ast.h
 # 	@$(CC) $(CFLAGS) -c $< -o $@
@@ -128,6 +129,9 @@ $(CHECK_DIR)/typecheck.o: $(CHECK_DIR)/typecheck.c
 	@$(CC) $(CFLAGS) -c $< -o $@
 
 $(CHECK_DIR)/variable_semantic.o: $(CHECK_DIR)/variable_semantic.c
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+$(CHECK_DIR)/function.o: $(CHECK_DIR)/function.c
 	@$(CC) $(CFLAGS) -c $< -o $@
 
 # Regla genérica para compilar cualquier archivo .c en .o

@@ -39,6 +39,9 @@ void accept(ASTVisitor* visitor,ASTNode* node)
     case AST_IF:
         visitor->control.conditional(visitor,node);
         break;
+    case AST_CALL_FUNC:
+        visitor->expr.call_function(visitor,node);
+        break;
     default:
         break;
     }

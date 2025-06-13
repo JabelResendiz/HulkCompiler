@@ -10,7 +10,7 @@
 #include "visitor_llvm.h"
 
 // Funcion para obtnener el tipo LLVM correspondiente a un tipo de lenguaje
-LLVMTypeRef get_llvm_type(ValueType type);
+LLVMTypeRef get_llvm_type(TypeValue* type);
 
 //Generar la funcion main en LLVM IR
 void codegen_main(ASTNode* node,const char* filename);

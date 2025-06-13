@@ -37,8 +37,8 @@ void visit_binary_op(ASTVisitor * v, ASTNode* node)
     accept(v,left);
     accept(v,right);
 
-    ValueType type_left = left->computed_type;
-    ValueType type_right = right->computed_type;
+    TypeValue* type_left = left->computed_type;
+    TypeValue* type_right = right->computed_type;
 
     if(!match_op(type_left,type_right,node->data.binary_op.op) )
     {

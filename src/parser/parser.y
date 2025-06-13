@@ -52,18 +52,23 @@
 
 
 %token <val> NUMBER
+%token <val> PI
+%token <val> E
 %token <var> ID
 %token <str> STRING
 %token <str> BOOLEAN
-%token ERROR LET IN IF ELSE ELIF
+%token ERROR LET IN IF ELSE ELIF WHILE
 %token LPAREN RPAREN SEMICOLON COMMA LBRACKET RBRACKET COLON EQUALS
-%token EQUALS
-%token DOT
+%token DESTRUCTOR NEW BASE FUNCTION
+%token DOT TYPE INHERITS
 
+%left IS AS
+%left CONCAT_DOUBLE
 %left CONCAT
 %left AND
 %left OR
 %left NOT
+%left NOT_EQUALS
 %left GE GT LE LT EQ
 %left PLUS MINUS
 %left MULT DIVIDE MOD
@@ -72,10 +77,9 @@
 
 %type <node> expr statement let_in_expr
 %type <node> var
+%type <node> call_function
 
-
-%type <arg_list> assignments args
-
+%type <arg_list> assignments args args_not_empty
 
 
 
@@ -124,19 +128,20 @@ expr:
     | STRING                      {$$ = create_string_node($1);}
     | BOOLEAN                     {$$ = create_boolean_node($1);}
     | let_in_expr                 {$$ = $1;}
+    | call_function               {$$ = $1;}
     | ID                          {$$ = create_var_node($1,"");}
-    | expr CONCAT expr            {$$ = create_binary_op_node(OP_CONCAT,"@",$1,$3,TYPE_STRING);}
-    | expr GE expr                {$$ = create_binary_op_node(OP_GE,">=",$1,$3,TYPE_BOOLEAN);}
-    | expr EQ expr                {$$ = create_binary_op_node(OP_EQ,"==",$1,$3,TYPE_BOOLEAN);} 
-    | expr GT expr                {$$ = create_binary_op_node(OP_GT,">",$1,$3,TYPE_BOOLEAN);}
-    | expr LE expr                {$$ = create_binary_op_node(OP_LE,"<=",$1,$3,TYPE_BOOLEAN);}
-    | expr LT expr                {$$ = create_binary_op_node(OP_LT,"<",$1,$3,TYPE_BOOLEAN);}
-    | expr PLUS expr              {$$ = create_binary_op_node(OP_ADD,"+",$1,$3,TYPE_NUM);}
-    | expr MINUS expr             {$$ = create_binary_op_node(OP_SUB,"-",$1,$3,TYPE_NUM);}
-    | expr MULT expr              {$$ = create_binary_op_node(OP_MULT,"*",$1,$3,TYPE_NUM);}
-    | expr DIVIDE expr            {$$ = create_binary_op_node(OP_DIV,"/",$1,$3,TYPE_NUM);}
-    | expr MOD expr               {$$ = create_binary_op_node(OP_MOD,"%",$1,$3,TYPE_NUM);}
-    | expr POWER expr             {$$ = create_binary_op_node(OP_POW,"^",$1,$3,TYPE_NUM);}
+    | expr CONCAT expr            {$$ = create_binary_op_node(OP_CONCAT,"@",$1,$3,&TYPE_STRING);}
+    | expr GE expr                {$$ = create_binary_op_node(OP_GE,">=",$1,$3,&TYPE_BOOLEAN);}
+    | expr EQ expr                {$$ = create_binary_op_node(OP_EQ,"==",$1,$3,&TYPE_BOOLEAN);} 
+    | expr GT expr                {$$ = create_binary_op_node(OP_GT,">",$1,$3,&TYPE_BOOLEAN);}
+    | expr LE expr                {$$ = create_binary_op_node(OP_LE,"<=",$1,$3,&TYPE_BOOLEAN);}
+    | expr LT expr                {$$ = create_binary_op_node(OP_LT,"<",$1,$3,&TYPE_BOOLEAN);}
+    | expr PLUS expr              {$$ = create_binary_op_node(OP_ADD,"+",$1,$3,&TYPE_NUM);}
+    | expr MINUS expr             {$$ = create_binary_op_node(OP_SUB,"-",$1,$3,&TYPE_NUM);}
+    | expr MULT expr              {$$ = create_binary_op_node(OP_MULT,"*",$1,$3,&TYPE_NUM);}
+    | expr DIVIDE expr            {$$ = create_binary_op_node(OP_DIV,"/",$1,$3,&TYPE_NUM);}
+    | expr MOD expr               {$$ = create_binary_op_node(OP_MOD,"%",$1,$3,&TYPE_NUM);}
+    | expr POWER expr             {$$ = create_binary_op_node(OP_POW,"^",$1,$3,&TYPE_NUM);}
     | LPAREN expr RPAREN          {$$ = $2;}
     | ERROR
     {
@@ -154,17 +159,17 @@ assignments:
     var
     {
         $$ = malloc(sizeof(*$$));
-        $$-> args = malloc(sizeof(ASTNode*) * 1);
-        $$-> args[0] = $1;
-        $$-> arg_count = 1;
+        $$->args = malloc(sizeof(ASTNode*) * 1);
+        $$->args[0] = $1;
+        $$->arg_count = 1;
     }
     | var COMMA assignments 
     {
         $$ = malloc(sizeof(*$$));
         $$->args = malloc(sizeof(ASTNode*) * ($3->arg_count + 1));
         $$-> args[0]= $1;
-        memcpy($$-> args + 1,$3->args,sizeof(ASTNode*) * $3->arg_count);
-        $$ ->arg_count = $3 ->arg_count +1;
+        memcpy($$->args + 1,$3->args,sizeof(ASTNode*) * $3->arg_count);
+        $$ ->arg_count = $3->arg_count +1;
         free($3->args);
     }
 ;
@@ -186,6 +191,54 @@ args:
     }
 ;
 
+
+call_function:
+    ID LPAREN args RPAREN           {$$ = create_call_function_node($1,$3->args,$3->arg_count);}
+;
+
+args:
+    expr 
+    {
+        $$ = malloc(sizeof(*$$));
+        $$->args = malloc(sizeof(ASTNode*) * 1);
+        $$->args[0] = $1;
+        $$->arg_count = 1;
+    }
+    | expr COMMA args_not_empty
+    {
+        $$ = malloc(sizeof(*$$));
+        $$->args = malloc(sizeof(ASTNode*)*($3->arg_count+1));
+        $$->args[0]= $1;
+        memcpy($$->args + 1,$3->args,sizeof(ASTNode*) * $3->arg_count);
+        $$->arg_count = $3->arg_count +1;
+        free($3->args);
+    }
+    | /* empty */
+    {
+        $$ = malloc(sizeof(*$$));
+        $$->args = NULL;
+        $$->arg_count = 0;
+    }
+;
+
+args_not_empty:
+    expr 
+    {
+        $$ = malloc(sizeof(*$$));
+        $$->args = malloc(sizeof(ASTNode*) * 1);
+        $$->args[0] = $1;
+        $$->arg_count = 1;
+    }
+    | expr COMMA args_not_empty
+    {
+        $$ = malloc(sizeof(*$$));
+        $$->args = malloc(sizeof(ASTNode*)*($3->arg_count+1));
+        $$->args[0]= $1;
+        memcpy($$->args + 1,$3->args,sizeof(ASTNode*) * $3->arg_count);
+        $$->arg_count = $3->arg_count +1;
+        free($3->args);
+    }
+;
 
 %%
 

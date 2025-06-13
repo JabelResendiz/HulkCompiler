@@ -20,7 +20,6 @@ typedef struct LLVMScope
 }LLVMScope;
 
 
-void print_scope();
 void push_scope(void);
 void pop_scope(void);
 LLVMValueRef lookup_variable(const char* name);

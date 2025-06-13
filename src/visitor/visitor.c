@@ -28,7 +28,11 @@ void accept(ASTVisitor* visitor,ASTNode* node)
         visitor->expr.binary(visitor,node);
         break;
     case AST_ASSIGNMENT:
+    case AST_DESTRUCTOR:
         visitor->expr.assignment(visitor,node);
+        break;
+    case AST_CALL_FUNC:
+        visitor->expr.call_function(visitor,node);
         break;
     case AST_BLOCK:
         visitor->control.block(visitor,node);
@@ -39,17 +43,29 @@ void accept(ASTVisitor* visitor,ASTNode* node)
     case AST_IF:
         visitor->control.conditional(visitor,node);
         break;
-    case AST_CALL_FUNC:
-        visitor->expr.call_function(visitor,node);
+    case AST_WHILE:
+        visitor->control.while_loop(visitor,node);
         break;
+    case AST_DECL_FUNC:
+        visitor->control.dec_function(visitor,node);
+        break;
+
+    case AST_TYPE:
+        visitor->types.type_dec(visitor,node);
+        break;
+    case AST_INSTANCE:
+        visitor->types.type_instance(visitor,node);
+        break;
+    
+    case AST_GETTER:
+        visitor->attrs.getter(visitor,node);
+        break;
+    case AST_SETTER:
+        visitor->attrs.setter(visitor,node);
+        break;
+        
     default:
         break;
     }
 }
 
-
-
-// void get_context(ASTVisitor* visitor,ASTNode* node)
-// {
-//     fo
-// }

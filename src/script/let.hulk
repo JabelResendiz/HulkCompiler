@@ -2,3 +2,10 @@
 
 
 let h =90 in h+90;
+
+let h= 90 in h;
+
+let x = 12 in let y=x in x==y;
+
+
+let x = 89 in print(x);

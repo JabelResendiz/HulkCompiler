@@ -1,0 +1,37 @@
+
+
+
+type A
+{
+    
+}
+
+type Point(x,y)
+{
+    x =0;
+    y =0;
+
+    getX() => self.x;
+    getY() => self.y;
+
+    setX() => self.x := x;
+    setY() => self.y := y;
+    
+}
+
+
+type PolarPoint inherits Point
+{
+    
+}
+
+
+
+type Circunferencia inherits Point
+{
+
+}
+
+
+
+let pt = new Point() in 12;

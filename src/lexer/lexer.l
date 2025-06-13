@@ -36,16 +36,18 @@
 ">"             { return GT; }
 "<"             { return LT; }
 "="             { return EQUALS; }
+"=>"            { return ARROW;}
 "if"            { return IF;}
 "else"          { return ELSE;}
 "let"           { return LET; }
 "in"            { return IN; }
 ":="            { return DESTRUCTOR; }
+":"             { return COLON; }    
 "!="            { return NOT_EQUALS;}
 "!"             { return NOT;}
 "&"             { return AND;}
 "|"             { return OR;}
-"@@"            { return CONCAT_DOUBLE;}
+"@@"            { return DCONCAT;}
 "@"             { return CONCAT;}
 "PI"            { return PI;}
 "E"             { return E;}

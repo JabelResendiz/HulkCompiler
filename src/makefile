@@ -40,12 +40,14 @@ $(BUILD_DIR):
 	@mkdir -p $(BUILD_DIR)
 
 # El directorio build se pone como dependencia order-only (con el símbolo |)
-$(EXEC): lex.yy.o y.tab.o $(AST_DIR)/ast.o $(AST_DIR)/keyword.o $(SRC_DIR)/main.o \
+$(EXEC): lex.yy.o y.tab.o $(AST_DIR)/ast.o $(AST_DIR)/keyword.o \
+	$(AST_DIR)/basic.o $(AST_DIR)/cond_while.o $(AST_DIR)/function.o $(AST_DIR)/op.o $(AST_DIR)/poo.o \
+	$(SRC_DIR)/main.o \
     $(LLVM_DIR)/init_codegen.o $(LLVM_DIR)/visitor_llvm.o \
 	$(LLVM_DIR)/codegen.o $(LLVM_SCOPE_DIR)/llvm_scope.o  $(LLVM_DIR)/visitor_llvm.o\
 	$(LLVM_DIR)/llvm_op.o $(LLVM_DIR)/visitor_llvm.o \
-    $(CHECK_DIR)/typecheck.o  $(CHECK_DIR)/variable_semantic.o $(CHECK_DIR)/function.o\
-	$(CHECK_DIR)/check_semantic.o $(SCOPE_DIR)/scope.o $(VISITOR_DIR)/visitor.o \
+    $(CHECK_DIR)/typecheck.o  $(CHECK_DIR)/variable_semantic.o $(CHECK_DIR)/function.o $(CHECK_DIR)/cond_while.o\
+	$(CHECK_DIR)/check_semantic.o $(CHECK_DIR)/type_semantic.o $(SCOPE_DIR)/scope.o $(SCOPE_DIR)/inheritance.o $(VISITOR_DIR)/visitor.o \
 	$(UTILS_DIR)/print_utils.o \
 	$(AST_DIR)/type.o |$(BUILD_DIR)
 
@@ -70,60 +72,56 @@ $(LLVM_DIR)/codegen.o: $(LLVM_DIR)/codegen.c $(LLVM_DIR)/codegen.h $(AST_DIR)/as
 	@echo "⚡ Compiling module LLVM..."
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-# $(LLVM_DIR)/llvm_builtins.o: $(LLVM_DIR)/llvm_builtins.c $(LLVM_DIR)/llvm_builtins.h $(VISITOR_DIR)/llvm_visitor.h
-# 	@$(CC) $(CFLAGS) -c $< -o $@
-
 $(LLVM_SCOPE_DIR)/llvm_scope.o: $(LLVM_SCOPE_DIR)/llvm_scope.c $(LLVM_SCOPE_DIR)/llvm_scope.h
 	@$(CC) $(CFLAGS) -c $< -o $@
-
-# $(LLVM_DIR)/llvm_string.o: $(LLVM_DIR)/llvm_string.c $(LLVM_DIR)/llvm_string.h
-# 	@$(CC) $(CFLAGS) -c $< -o $@
 
 $(LLVM_DIR)/llvm_op.o: $(LLVM_DIR)/llvm_op.c $(LLVM_DIR)/llvm_op.h $(LLVM_DIR)/visitor_llvm.h
 	@$(CC) $(CFLAGS) -c $< -o $@
 
+
+
+# AST
 $(AST_DIR)/ast.o: $(AST_DIR)/ast.c $(AST_DIR)/ast.h
 	@$(CC) $(CFLAGS) -c $< -o $@
 
 $(UTILS_DIR)/print_utils.o: $(UTILS_DIR)/print_utils.c $(UTILS_DIR)/print_utils.h
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-# $(CHECK_DIR)/check_semantic.o: $(CHECK_DIR)/check_semantic.c $(CHECK_DIR)/check_semantic.h $(AST_DIR)/ast.h
-# 	@$(CC) $(CFLAGS) -c $< -o $@
-
-
-
+# AQUI VAN LAS DEL DIRECTORIO SE SCOPE
 $(SCOPE_DIR)/scope.o: $(SCOPE_DIR)/scope.c $(SCOPE_DIR)/scope.h
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-# $(SCOPE_DIR)/context.o: $(SCOPE_DIR)/context.c
-# 	@$(CC) $(CFLAGS) -c $< -o $@
+$(SCOPE_DIR)/inheritance.o: $(SCOPE_DIR)/inheritance.c $(SCOPE_DIR)/inheritance.h
+	@$(CC) $(CFLAGS) -c $< -o $@
 
+# AQUI VAN LAS DIRECTORIO DE VISITOR
 $(VISITOR_DIR)/visitor.o: $(VISITOR_DIR)/visitor.c $(VISITOR_DIR)/visitor.h
 	@$(CC) $(CFLAGS) -c $< -o $@
 
+# AQUI VAN LAS DIRECTORIO DE AST
 $(AST_DIR)/type.o: $(AST_DIR)/type.c $(AST_DIR)/type.h
 	@$(CC) $(CFLAGS) -c $< -o $@
 
 $(AST_DIR)/keyword.o: $(AST_DIR)/keyword.c $(AST_DIR)/keyword.h
 	@$(CC) $(CFLAGS) -c $< -o $@
 
+$(AST_DIR)/function.o: $(AST_DIR)/function.c
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+$(AST_DIR)/basic.o: $(AST_DIR)/basic.c
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+$(AST_DIR)/cond_while.o: $(AST_DIR)/cond_while.c
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+$(AST_DIR)/op.o: $(AST_DIR)/op.c
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+$(AST_DIR)/poo.o: $(AST_DIR)/poo.c
+	@$(CC) $(CFLAGS) -c $< -o $@
 
 
-# $(CHECK_DIR)/basic_checking.o: $(CHECK_DIR)/basic_checking.c
-# 	@$(CC) $(CFLAGS) -c $< -o $@
-
-# $(CHECK_DIR)/variable_checking.o: $(CHECK_DIR)/variable_checking.c
-# 	@$(CC) $(CFLAGS) -c $< -o $@
-
-# $(CHECK_DIR)/function_checking.o: $(CHECK_DIR)/function_checking.c
-# 	@$(CC) $(CFLAGS) -c $< -o $@
-
-# $(CHECK_DIR)/unification.o: $(CHECK_DIR)/unification.c
-# 	@$(CC) $(CFLAGS) -c $< -o $@
-
-# $(CHECK_DIR)/cond_loop_checking.o: $(CHECK_DIR)/cond_loop_checking.c
-# 	@$(CC) $(CFLAGS) -c $< -o $@
+# AQUI VAN LAS DIRECTORIO DE CHECK
 
 $(CHECK_DIR)/typecheck.o: $(CHECK_DIR)/typecheck.c
 	@$(CC) $(CFLAGS) -c $< -o $@
@@ -133,6 +131,13 @@ $(CHECK_DIR)/variable_semantic.o: $(CHECK_DIR)/variable_semantic.c
 
 $(CHECK_DIR)/function.o: $(CHECK_DIR)/function.c
 	@$(CC) $(CFLAGS) -c $< -o $@
+
+$(CHECK_DIR)/cond_while.o: $(CHECK_DIR)/cond_while.c
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+$(CHECK_DIR)/type_semantic.o: $(CHECK_DIR)/type_semantic.c
+	@$(CC) $(CFLAGS) -c $< -o $@
+
 
 # Regla genérica para compilar cualquier archivo .c en .o
 %.o: %.c

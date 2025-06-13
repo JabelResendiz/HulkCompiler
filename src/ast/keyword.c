@@ -8,7 +8,7 @@ char * keywords[]=
 {
     "string","number","boolean","true","false",
     "function","let","in", "is","as","type",
-    "new","inherits"
+    "new","inherits","while"
 };
 
 char scape_chars []= {'n','t','\\','\"'};

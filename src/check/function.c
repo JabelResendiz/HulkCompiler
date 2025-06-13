@@ -1,59 +1,385 @@
 
-//function.c
-
+// function.c
 
 #include "check_semantic.h"
 #include "../scope/scope.h"
+#include "../ast/keyword.h"
+#include <string.h>
 
-void visit_call_function(ASTVisitor* v, ASTNode* node)
+void visit_call_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
 {
-    ASTNode** args = node->data.func_node.args;
+    ASTNode **args = node->data.func_node.args;
 
     // 1. Verificamos los argumentos
-    for(int i=0;i<node->data.func_node.arg_count;i++)
+    for (int i = 0; i < node->data.func_node.arg_count; i++)
     {
-        args[i]->scope->parent = node->scope;
-        accept(v,args[i]);
+        propagate_env_scope(node, args[i]);
+        accept(v, args[i]);
     }
 
+    // buscamos la funcion en el contexto global si es metodo de tipo
+
+    EnvItem *env_item = !type ? find_env_item(node->env, node->data.func_node.name, 0, 0)
+                              : lookup_type_member_recursive(type->def_node->env,
+                                                             node->data.func_node.name, type, 1);
+
+    if (env_item)
+    {
+        if (type)
+        {
+            visit_dec_function(v, env_item->usages, type);
+        }
+        else
+        {
+            accept(v, env_item->usages);
+        }
+    }
+    /*
+    AHST AQUI TODO BIEN
+    */
+
     // 2. Buscar los tipos definidos en los scopes
-    Scope * scope = node->scope;
+    Scope *scope = type ? type->def_node->scope : node->scope;
 
     int arg_count = node->data.func_node.arg_count;
 
-    // crear un array de tpyes de los argumentos
-    TypeValue** types = malloc((sizeof(TypeValue*) *arg_count ));
+    UnifiedIndex *unified = try_unified_func(v, args, scope, arg_count, node->data.func_node.name, env_item);
 
-    for(int i=0;i<arg_count;i++)
+    for (UnifiedIndex *curr = unified; curr; curr = curr->next)
     {
-        TypeValue* computed_type = node->computed_type;
-
-        // buscar el tipo del argumento en el scope
-        Symbol* ret = find_type_scopes(args[i]->scope,computed_type->name);
-
-        if(ret) types[i]= ret->type;
-
-        else types[i]= computed_type;
+        accept(v, args[curr->value]);
     }
 
-    //
+    free_unified_index(unified);
 
-    Function* f = malloc(sizeof(Function*));
+    // crear un array de tpyes de los argumentos
+    TypeValue **types = resolve_nodes_type(args, arg_count);
+
+    Function *f = malloc(sizeof(Function *));
 
     f->name = node->data.func_node.name;
-    f->count_args = node->data.func_node.arg_count;
+    f->count_args = arg_count;
     f->args_types = types;
 
-    FuncStructure* func_structure = match_function_scope(scope,f,NULL);
+    Function *dec = NULL;
 
-    if(func_structure->function)
+    if (env_item)
+    {
+        TypeValue **dec_args_type = resolve_nodes_type(
+            env_item->usages->data.func_node.args,
+            env_item->usages->data.func_node.arg_count);
+
+        dec = malloc(sizeof(Function));
+        dec->name = env_item->usages->data.func_node.name;
+        dec->count_args = env_item->usages->data.func_node.arg_count;
+        dec->args_types = dec_args_type;
+        dec->result_types = env_item->computed_type ? env_item->computed_type : &TYPE_GENERIC;
+    }
+
+    FuncStructure *func_structure = type ? find_function_in_hierarchy(type, f, dec) : match_function_scope(node->scope, f, dec);
+
+    if (func_structure->function)
     {
         node->computed_type = func_structure->function->result_types;
 
-        fprintf(stderr,"\nLa funcData es %s\n", func_structure->function->name);
+        fprintf(stderr, "\nLa funcData es %s\n", func_structure->function->name);
     }
 
+    if (!func_structure->state->is_match)
+    {
+        fprintf(stderr,"Candela\n");
+        if (!func_structure->state->name_matches)
+        {
+            node->computed_type = &TYPE_ERROR;
+            fprintf(stderr,"ERROR\n");
+            exit(1);
+
+        }
+        else if (!func_structure->state->parameters_matched)
+        {
+            fprintf(stderr,"ERROR\n");
+            exit(1);
+        }
+        else
+        {
+            if (!strcmp(func_structure->state->second_type_name, "Error"))
+                return;
+
+            fprintf(stderr,"ERROR\n");
+            exit(1);
+        }
+    }
+
+    free(func_structure->state);
     free(types);
     free(f);
+    
+}
 
+
+void visit2_call_function(ASTVisitor * v, ASTNode *node)
+{
+    return visit_call_function(v,node,NULL);
+}
+void visit_dec_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
+{
+    // type is NULL
+
+    if (node->checked)
+    {
+        return;
+    }
+
+    node->checked = 1;
+
+    char *visitor_function = v->current_function;
+
+    // actualiza nombre actual
+    if (type)
+    {
+        v->current_function = node->data.func_node.name;
+    }
+
+    ASTNode **args = node->data.func_node.args;
+    ASTNode *body = node->data.func_node.body;
+
+    propagate_env_scope(node, body);
+
+    // comprobar que no es palabra reservada
+    if (match_keyword(node->data.func_node.name))
+    {
+        fprintf(stderr, "Es una palabra reservada el nombre de al funcion %s\n", node->data.func_node.name);
+        exit(1);
+    }
+
+    // Detectar nombres repetidos de parametros
+
+    for (int i = 0; i < node->data.func_node.arg_count; i++)
+    {
+        for (int j = i + 1; j < node->data.func_node.arg_count; j++)
+        {
+            if (!strcmp(args[i]->data.func_node.name, args[j]->data.func_node.name))
+            {
+                fprintf(stderr, "Simbolo es usado por dos arguments");
+                v->current_function = visitor_function;
+                exit(1);
+            }
+        }
+    }
+
+    // Procesar cada parametro
+
+    for (int i = 0; i < node->data.func_node.arg_count; i++)
+    {
+        // conectar scope
+        propagate_env_scope(node, args[i]);
+
+        // buscar el tipo declarado (por nombre)
+        Symbol *arg_type = find_type_scopes(node->scope, args[i]->static_type);
+
+        int flag = 0;
+
+        // si no existe buscar en el contexto
+
+        if (strcmp(args[i]->static_type, "") && !arg_type)
+        {
+            fprintf(stderr, "NO SE EJECUTA\n");
+
+            EnvItem *env_item = find_env_item(node->env, args[i]->static_type, 1, 0);
+
+            if (env_item)
+            {
+                accept(v, env_item->usages);
+
+                arg_type = find_type_scopes(node->scope, args[i]->static_type);
+
+                if (!arg_type)
+                {
+                    arg_type = malloc(sizeof(Symbol));
+                    arg_type->name = env_item->computed_type->name;
+                    arg_type->type = env_item->computed_type;
+
+                    flag = 1;
+                }
+            }
+
+            // si no se encuentra el entorno : ERROR
+
+            else
+            {
+                fprintf(stderr, "ERROR EN LA BUSQUEDA DE ENTORNO\n");
+                args[i]->computed_type = &TYPE_ERROR;
+            }
+        }
+
+        // si no tiene tipo usar TYPE_GENERIC
+        if (!strcmp(args[i]->static_type, ""))
+        {
+            args[i]->computed_type = &TYPE_GENERIC;
+        }
+
+        // sino setear el resultado
+        else if (arg_type)
+        {
+            args[i]->computed_type = arg_type->type;
+        }
+
+        // se agrega el arguemnto al contexto
+        scope_add_symbol(node->scope, args[i]->data.var_name, args[i]->computed_type, NULL, 1);
+
+        if (flag)
+            free(arg_type);
+    }
+
+    // Validar el cuerpo
+    accept(v, body);
+
+    // buscar el entorno asicado al nombre de al funcion
+    EnvItem *env_item = !type ? find_env_item(node->env, node->data.func_node.name, 0, 0)
+                              : lookup_type_member_recursive(type->def_node->env,
+                                                             node->data.func_node.name, type, 1);
+
+    // Infiere el tipo de retorno
+    TypeValue *inferred_type_body = resolve_node_type(body);
+
+    // buscar el tipo de retorno de del nodo
+    Symbol *static_type_node = find_type_scopes(node->scope, node->static_type);
+
+    // si el tipo del cuerpo es GENERIC, pero existe un tipo definido y es posible unficar
+    if (compare_types(inferred_type_body, &TYPE_GENERIC) &&
+        static_type_node && try_unify_operand(v, body, static_type_node->type))
+    {
+        // vuelve a analizar el cuerpo para propagar el tipo unificado
+
+        accept(v, body);
+        inferred_type_body = static_type_node->type;
+    }
+
+    // si no hay tipo definido del nodo , pero hay uno en el entorno y hay conflicto con el inferido, ERROR
+    if (!static_type_node && env_item->computed_type &&
+        !ancestor_type(env_item->computed_type, inferred_type_body) &&
+        !ancestor_type(env_item->computed_type, &TYPE_ERROR) &&
+        !ancestor_type(env_item->computed_type, &TYPE_GENERIC) &&
+        !ancestor_type(inferred_type_body, &TYPE_GENERIC) &&
+        !ancestor_type(inferred_type_body, &TYPE_ERROR))
+    {
+        fprintf(stderr, "Es necesario lanzar un error aqui\n");
+        exit(1);
+    }
+
+    // buscar el tipo de entorno anotado (si se escribio uno explicito)
+    int flag = 0;
+
+    // si
+    if (strcmp(node->static_type, "") && !static_type_node)
+    {
+        fprintf(stderr, "NO SE EJECUTA\n");
+
+        EnvItem *env_item = find_env_item(node->env, node->static_type, 1, 0);
+
+        if (env_item)
+        {
+            accept(v, env_item->usages);
+
+            static_type_node = find_type_scopes(node->scope, node->static_type);
+
+            if (!static_type_node)
+            {
+                static_type_node = malloc(sizeof(Symbol));
+                static_type_node->name = env_item->computed_type->name;
+                static_type_node->type = env_item->computed_type;
+
+                flag = 1;
+            }
+        }
+
+        // no se encontro en el entorno
+
+        else
+        {
+            fprintf(stderr, "EL tipo de retorno de la funcion no fue definido\n");
+        }
+    }
+
+    // comprobacion de incompatiblidad entre tipos inferidos y el tipo definido
+    if (static_type_node &&
+        !ancestor_type(static_type_node->type, inferred_type_body) && !compare_types(inferred_type_body, &TYPE_ERROR))
+    {
+        fprintf(stderr, "ERRROR\n");
+        exit(1);
+    }
+
+    if (static_type_node)
+    {
+        inferred_type_body = static_type_node->type;
+    }
+
+    // Ultimo intento de inferenci si el tipo aun es GENERIC
+
+    if (compare_types(inferred_type_body, &TYPE_GENERIC))
+    {
+        fprintf(stderr, "~~~~~~~~~~NO SE EJECUTA~~~~~~~~~~~~~~\n");
+        accept(v, body);
+        if (compare_types(inferred_type_body, &TYPE_GENERIC))
+        {
+            fprintf(stderr, "ERROR DE NUEVO\n");
+            exit(1);
+        }
+    }
+
+    // Declaracion final de la fucnion
+
+    Function *func = find_function_by_name(node->scope, node->data.func_node.name);
+    TypeValue **args_type = resolve_nodes_type(args, node->data.func_node.arg_count);
+
+    if (!func)
+    {
+        for (int i = 0; i < node->data.func_node.arg_count; i++)
+        {
+            // busca el simbolo que representa el parametro en el scope
+            Symbol *param = lookup_parameter(node->scope, args[i]->data.var_name);
+
+            fprintf(stderr, "el tipo del paramtror es %s\n", param->type->name);
+
+            if (compare_types(param->type, &TYPE_GENERIC))
+            {
+                fprintf(stderr, "CLASE CANDELAAAAAA\n");
+                accept(v, body);
+                if (compare_types(param->type, &TYPE_GENERIC))
+                {
+                    fprintf(stderr, "ERROR NUEVAMNET\n");
+                    exit(1);
+                }
+            }
+            // si fue anotado y definido
+            Symbol *def_type = find_type_scopes(node->scope, args[i]->static_type);
+
+            // si el tipo esta definido x:Int
+            if (def_type)
+                args_type[i] = def_type->type;
+
+            // si fue inferido del cuerpo
+            else
+                args_type[i] = param->type;
+
+            node->data.func_node.args[i]->computed_type = args_type[i];
+        }
+
+        // agregar la funcion al scope
+
+        scope_add_function(node->scope, node->data.func_node.arg_count,
+                           args_type, inferred_type_body, node->data.func_node.name);
+
+        body->computed_type = inferred_type_body;
+
+        if (flag)
+            free(static_type_node);
+
+        v->current_function = visitor_function;
+    }
+}
+
+void visit2_dec_function(ASTVisitor * v, ASTNode* node)
+{
+    return visit_dec_function(v,node,NULL);
 }

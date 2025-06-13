@@ -5,172 +5,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ast.h"
-#include "type.h"
 
-ASTNode *create_program_node(ASTNode **statements,
-                             int count,
-                             ASTNodeType type)
-{
-    ASTNode *node = malloc(sizeof(ASTNode));
-    node->line = line_num;
-    node->type = type;
-    node->scope = create_scope(NULL);
-    node->data.program.statements = malloc(sizeof(ASTNode *) * count);
 
-    for (int i = 0; i < count; i++)
-    {
-        node->data.program.statements[i] = statements[i];
-    }
-
-    node->data.program.count = count;
-
-    return node;
-}
-
-ASTNode *create_num_node(double value)
-{
-    ASTNode *node = malloc(sizeof(ASTNode));
-    node->line = line_num;
-    node->type = AST_NUM;
-    node->scope = create_scope(NULL);
-    node->computed_type = &TYPE_NUM;
-
-    node->data.number_value = value;
-
-    return node;
-}
-
-ASTNode *create_var_node(char *name, char *type)
-{
-    ASTNode *node = malloc(sizeof(ASTNode));
-    node->line = line_num;
-    node->type = AST_VAR;
-    node->scope = create_scope(NULL);
-    node->computed_type = &TYPE_OBJ;
-    node->data.var_name = name;
-
-    return node;
-}
-
-ASTNode *create_string_node(char *value)
-{
-    ASTNode *node = malloc(sizeof(ASTNode));
-    node->line = line_num;
-    node->type = AST_STRING;
-    node->scope = create_scope(NULL);
-    node->computed_type = &TYPE_STRING;
-    node->data.string_value = value;
-
-    return node;
-}
-
-ASTNode *create_boolean_node(char *value)
-{
-    ASTNode *node = malloc(sizeof(ASTNode));
-    node->line = line_num;
-    node->type = AST_BOOLEAN;
-    node->scope = create_scope(NULL);
-    node->computed_type = &TYPE_BOOLEAN;
-    node->data.string_value = value;
-
-    return node;
-}
-
-ASTNode *create_binary_op_node(Operator op,
-                               char *name_op,
-                               ASTNode *left,
-                               ASTNode *right,
-                               TypeValue* type)
-{
-    ASTNode *node = malloc(sizeof(ASTNode));
-    node->line = line_num;
-    node->type = AST_BINARY_OP;
-    node->scope = create_scope(NULL);
-    node->computed_type = type;
-    node->data.binary_op.name_op = name_op;
-    node->data.binary_op.op = op;
-    node->data.binary_op.left = left;
-    node->data.binary_op.right = right;
-
-    return node;
-}
-
-ASTNode *create_let_in_node(ASTNode **bindings,
-                            int dec_count,
-                            ASTNode *body)
-{
-    ASTNode *node = malloc(sizeof(ASTNode));
-    node->line = line_num;
-    node->type = AST_LET;
-    node->scope = create_scope(NULL);
-    node->computed_type = &TYPE_OBJ;
-    node->data.func_node.name = "";
-    node->data.func_node.args = malloc(sizeof(ASTNode *) * dec_count);
-
-    for (int i = 0; i < dec_count; i++)
-    {
-        node->data.func_node.args[i] = bindings[i];
-    }
-
-    node->data.func_node.arg_count = dec_count;
-    node->data.func_node.body = body;
-
-    return node;
-}
-
-ASTNode *create_assignment_node(char *name, ASTNode *value, char *type_name, ASTNodeType type)
-{
-    ASTNode *node = malloc(sizeof(ASTNode));
-    node->line = line_num;
-    node->type = type;
-    node->computed_type = &TYPE_VOID;
-    node->scope = create_scope(NULL);
-    node->data.binary_op.left = create_var_node(name, NULL);
-    node->data.binary_op.right = value;
-    // node->data.binary_op.left->static_type = type_name;
-    return node;
-}
-
-ASTNode *create_conditional_node(ASTNode *cond,
-                                 ASTNode *body,
-                                 ASTNode *else_branch)
-{
-    ASTNode *node = malloc(sizeof(ASTNode));
-
-    node->line = line_num;
-    node->type = AST_IF;
-    node->computed_type = &TYPE_OBJ;
-    node->scope = create_scope(NULL);
-    node->data.conditional.cond = cond;
-    node->data.conditional.body = body;
-    node->data.conditional.else_branch = else_branch;
-
-    return node;
-}
-
-ASTNode *create_call_function_node(char *name, ASTNode **args, int arg_count)
-{
-    ASTNode* node = malloc(sizeof(ASTNode));
-    node->line = line_num;
-    node->type = AST_CALL_FUNC;
-    node->scope = create_scope(NULL);
-    node->computed_type = &TYPE_OBJ;
-    node->data.func_node.name = name;
-    node->data.func_node.args = malloc(sizeof(ASTNode*) * arg_count);
-
-    node->checked = 0;
-    for(int i=0;i<arg_count;i++)
-    {
-        node->data.func_node.args[i] = args[i];
-    }
-
-    node->data.func_node.arg_count = arg_count;
-
-    return node;
-}
 
 void free_ast(ASTNode *node)
 {
+    
     if (!node)
         return;
 
@@ -181,6 +21,9 @@ void free_ast(ASTNode *node)
         break;
     case AST_BINARY_OP:
     case AST_ASSIGNMENT:
+    case AST_DESTRUCTOR:
+    case AST_WHILE:
+    case AST_GETTER:
         free_ast(node->data.binary_op.left);
         free_ast(node->data.binary_op.right);
         break;
@@ -192,20 +35,58 @@ void free_ast(ASTNode *node)
         free(node->data.program.statements);
         break;
 
+    case AST_DECL_FUNC:
     case AST_LET:
         for (int i = 0; i < node->data.func_node.arg_count; i++)
             free_ast(node->data.func_node.args[i]);
         free_ast(node->data.func_node.body);
         break;
-
+    
     case AST_IF:
         free_ast(node->data.conditional.body);
         free_ast(node->data.conditional.else_branch);
         free_ast(node->data.conditional.cond);
         break;
+    case AST_CALL_FUNC:
+        for (int i = 0; i < node->data.func_node.arg_count; i++)
+        {
+            free_ast(node->data.func_node.args[i]);
+        }
+        break;
+    case AST_TYPE:
+        // despues las definiciones de ti mismo
+        for (int i = 0; i < node->data.typeDef.args_count; i++)
+        {
+            free_ast(node->data.typeDef.args[i]);
+        }
+        // las definiciones de tu cuerpo
+        for (int i = 0; i < node->data.typeDef.body_count; i++)
+        {
+            free_ast(node->data.typeDef.body_elements[i]);
+        }
+
+        // despues las deifniciones de tu padre
+        for (int i = 0; i < node->data.typeDef.p_args_count; i++)
+        {
+            free_ast(node->data.typeDef.p_args[i]);
+        }
+        break;
+    case AST_INSTANCE:
+        for (int i = 0; i < node->data.typeDef.args_count; i++)
+        {
+            free_ast(node->data.typeDef.args[i]);
+        }
+        break;
+    case AST_SETTER:
+        free_ast(node->data.setter.property);
+        free_ast(node->data.setter.value);
+        free_ast(node->data.setter.instance);
+        break;
+
     }
 
     free_scope(node->scope);
+    free_env(node->env);
     free(node);
 }
 
@@ -281,7 +162,9 @@ void print_ast(ASTNode *node, int indent)
         case OP_CONCAT:
             op_str = "@";
             break;
-        // case OP_DCONCAT: op_str = "@@"; break;
+        case OP_DCONCAT: 
+            op_str = "@@"; 
+            break;
         case OP_EQ:
             op_str = "==";
             break;
@@ -300,9 +183,6 @@ void print_ast(ASTNode *node, int indent)
         case OP_LT:
             op_str = "<";
             break;
-        default:
-            op_str = "?";
-            break;
         }
         printf("Binary Op: %s\n", op_str);
         print_ast(node->data.binary_op.left, indent + 1);
@@ -310,6 +190,7 @@ void print_ast(ASTNode *node, int indent)
         break;
     }
     case AST_ASSIGNMENT:
+    case AST_DESTRUCTOR:
         printf("Assignment:\n");
         print_ast(node->data.binary_op.left, indent + 1);
         print_ast(node->data.binary_op.right, indent + 1);
@@ -329,5 +210,59 @@ void print_ast(ASTNode *node, int indent)
         printf("else part:\n");
         print_ast(node->data.conditional.else_branch, indent + 2);
         break;
+    case AST_WHILE:
+        printf("While:\n");
+        for (int i = 0; i < indent + 1; i++)
+            printf(" ");
+        printf("Condition:\n");
+        print_ast(node->data.binary_op.left, indent + 2);
+        for (int i = 0; i < indent + 1; i++)
+            printf(" ");
+        printf("Body:\n");
+        print_ast(node->data.binary_op.right, indent + 2);
+        break;
+    case AST_DECL_FUNC:
+        printf("Declaration Function : %s \n", node->data.func_node.name);
+        print_ast(node->data.func_node.body, indent + 1);
+        break;
+    case AST_CALL_FUNC:
+        printf("Function_call: %s\n", node->data.func_node.name);
+        int arg_count = node->data.func_node.arg_count;
+        for (int i = 0; i < arg_count; i++)
+        {
+            print_ast(node->data.func_node.args[i], indent + 1);
+        }
+        break;
+    case AST_TYPE:
+        printf("TYPE %s inherits %s\n", node->data.typeDef.name_type, node->data.typeDef.name_parent);
+        for (int i = 0; i < node->data.typeDef.body_count; i++)
+        {
+            print_ast(node->data.typeDef.body_elements[i], indent + 1);
+        }
+        break;
+    case AST_GETTER:
+        printf("Type member: \n");
+        for (int i = 0; i < indent + 1; i++)
+            printf("  ");
+        printf(" Instance:\n");
+        print_ast(node->data.binary_op.left, indent + 2);
+        for (int i = 0; i < indent + 1; i++)
+            printf("  ");
+        printf(" Member:\n");
+        print_ast(node->data.binary_op.right, indent + 2);
+        break;
+    case AST_INSTANCE:
+        printf("Type_instance: %s\n", node->data.typeDef.name_type);
+        for (int i = 0; i < node->data.typeDef.args_count; i++)
+        {
+            print_ast(node->data.typeDef.args[i], indent + 1);
+        }
+        break;
+    case AST_SETTER:
+        printf("Assignment:\n");
+        print_ast(node->data.setter.property, indent + 1);
+        print_ast(node->data.setter.value, indent + 1);
+        break;
     }
 }
+

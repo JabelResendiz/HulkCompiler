@@ -1,0 +1,650 @@
+
+
+// type_semantic.c
+
+#include "check_semantic.h"
+#include "../scope/inheritance.h"
+#include <stdio.h>
+#include <string.h>
+
+#define foreach_valueList(elem, list) \
+    for (UsageElemental *elem = (list) ? (list)->first : NULL; elem != NULL; elem = elem->next)
+
+InheritanceChain *ich_list;
+
+void visit_type_dec(ASTVisitor *v, ASTNode *node)
+{
+    // Deteccion de Herencia Circular
+    // Previene si el padre esta en la cadena de herencia
+    if (find_type_in_inheritance_chain(node->data.typeDef.name_parent, ich_list))
+    {
+        fprintf(stderr, "Hay un error aqui\n");
+
+        ich_list = free_inheritance_chain(ich_list);
+        return;
+    }
+
+    if (node->checked)
+    {
+        // si ya se inspecciono el nodo
+        return;
+    }
+
+    node->checked = 1;
+
+    // guarda el tipo actual del visitor
+    TypeValue *visitor_type = v->current_type;
+
+    // recoger el ambito del padre
+    Scope *parent_scope = node->scope->parent;
+
+    // actualizar la lista MRO del padre en la lista
+    ich_list = extend_inheritance_chain(node->data.typeDef.name_parent, ich_list);
+
+    // obtiene los parametros del tipo
+    ASTNode **params = node->data.typeDef.args;
+
+    // obtiene el conjutno de definciones del tipo
+    ASTNode **definitions = node->data.typeDef.body_elements;
+
+    /// Detectar parametros duplicados en la declaracion
+    for (int i = 0; i < node->data.typeDef.args_count - 1; i++)
+    {
+        for (int j = i + 1; j < node->data.typeDef.args_count; j++)
+        {
+            if (!strcmp(
+                    params[i]->data.var_name,
+                    params[j]->data.var_name))
+            {
+                fprintf(stderr, "Hay un error claro");
+                return;
+            }
+        }
+    }
+
+    // Procesa los parametro del tipo
+    for (int i = 0; i < node->data.typeDef.args_count; i++)
+    {
+        // configuracion del ambito y context
+        propagate_env_scope(node, params[i]);
+
+        // buscamos el tipo del parametro
+        Symbol *param_type = find_type_scopes(node->scope, params[i]->static_type);
+        int flag = 0;
+
+        // si el tipo esta definido y no se haya encontrado un tipo definido
+        if (strcmp(params[i]->static_type, "") && !param_type)
+        {
+
+            // buscar en el contexto
+            EnvItem *env_item = find_env_item(
+                node->env, params[i]->static_type, 1, 0);
+
+            // si fue encontrado
+            if (env_item)
+            {
+                // procesa su declaracion
+                accept(v, env_item->usages);
+
+                // reintenta buscar el tipo ahora que deberia esta definido
+                param_type = find_type_scopes(node->scope, params[i]->static_type);
+
+                // si el tipo sigue sin andar definido
+                if (!param_type)
+                {
+                    // se crea un simbolo temporal
+                    param_type = malloc(sizeof(Symbol));
+                    param_type->name = env_item->computed_type->name;
+                    param_type->type = env_item->computed_type;
+                    flag = 1;
+                }
+            }
+
+            // si no se encontro en el contexto : ERROR
+            else
+            {
+                fprintf(stderr, "ALGP SUCEDE\n");
+                params[i]->computed_type = &TYPE_ERROR;
+            }
+        }
+
+        // si el tipo no esta definido
+        if (!strcmp(params[i]->static_type, ""))
+        {
+            // se setea a ANY
+            params[i]->computed_type = &TYPE_GENERIC;
+        }
+        // si el tipo esta definido y el parametro se ha encontrado un tipo
+        else if (param_type)
+        {
+            // usar ese tipo
+            params[i]->computed_type = param_type->type;
+        }
+
+        // se declara el simbolo en el scope
+        scope_add_symbol(
+            node->scope, params[i]->data.var_name,
+            params[i]->computed_type, NULL, 1);
+
+        // se libera la memoria temporal
+        if (flag)
+            free(param_type);
+    }
+
+    // busqueda del tipo del padre
+    Symbol *parent_info = find_type_scopes(node->scope, node->data.typeDef.name_parent);
+    TypeValue *parent_type = &TYPE_OBJ;
+
+    // si existe el nombre de padre y no se haya encontrado en el ambito actual
+    if (strcmp(node->data.typeDef.name_parent, "") &&
+        !parent_info)
+
+    {
+        // buscar en el contexto
+        EnvItem *env_item = find_env_item(
+            node->env,
+            node->data.typeDef.name_parent, 1, 0);
+
+        // si se encontro en el ambito
+        if (env_item)
+        {
+            // se procesa la declaracion del padre
+            accept(v, env_item->usages);
+
+            // se reintenta buscar el tipo del padre en el ambito
+            parent_info = find_type_scopes(node->scope, node->data.typeDef.name_parent);
+
+            // si aun sigue sin encontrarse y el tipo de retorno del item existe
+            if (!parent_info && env_item->computed_type)
+            {
+                // setear el tipo del padre al tipo de retono del item
+                parent_type = env_item->computed_type;
+            }
+            else if (parent_info)
+            {
+                // se usa la info del padre
+                parent_type = parent_info->type;
+            }
+        }
+        // si no se encontro en el contexto : ERROR
+        else
+        {
+            fprintf(stderr, "hay un error en visit_type_decl \n");
+            exit(1);
+        }
+    }
+
+    // si existe el nombre del padre y es un tipo del inicial del programa : ERROR
+    else if (
+        strcmp(node->data.typeDef.name_parent, "") &&
+        is_builtin_type(parent_info->type))
+    {
+        fprintf(stderr, "HAY UN ERROR GRANDE\n");
+        exit(1);
+    }
+
+    else if (strcmp(node->data.typeDef.name_parent, ""))
+    {
+        parent_type = parent_info->type;
+    }
+
+    // si el parent no es de ningun tipo inicial y el hijo no tiene parametros propios
+    if (!is_builtin_type(parent_type) && !node->data.typeDef.args_count)
+    {
+        // copia la cantidad de parametros del padre al hijo
+        node->data.typeDef.args_count = parent_type->num_params;
+        node->data.typeDef.args = malloc(sizeof(ASTNode *) * parent_type->num_params);
+
+        // copia cada paametro del padre al hijo ,actualizando la linea a la del hijo
+        for (int i = 0; i < parent_type->num_params; i++)
+        {
+            node->data.typeDef.args[i] = parent_type->def_node->data.typeDef.args[i];
+            node->data.typeDef.args[i]->line = node->line;
+        }
+
+        // establece los arguemntos del tipo
+        params = node->data.typeDef.args;
+
+        // por cada parametro propaga el contexto y el padre y alo agrega ala tabla de simbolos
+        for (int i = 0; i < node->data.typeDef.args_count; i++)
+        {
+            propagate_env_scope(node, params[i]);
+
+            scope_add_symbol(
+                node->scope, params[i]->data.var_name,
+                params[i]->computed_type, NULL, 1);
+        }
+    }
+
+    // si el parent no es de nigun tipo incial pero el hijo tiene sus propios parametros
+    else if (!is_builtin_type(parent_type))
+    {
+
+        // crea una instancia temporal del tipo padre con los argumentos proporicionados
+        ASTNode *parent = create_struct_instance_node(
+            parent_type->name,
+            node->data.typeDef.p_args,
+            node->data.typeDef.p_args_count);
+
+        // pasa los argumentos
+        propagate_env_scope(node, parent);
+
+        parent->line = node->line;
+        // vistia la instancia padre para resovler tipos
+        accept(v, parent);
+
+        // libera la instancia temporal despues de usar
+        free_ast(parent);
+    }
+
+    ich_list = free_inheritance_chain(ich_list);
+
+    // crea el nuevo tipo
+    TypeValue *this = create_type(node->data.typeDef.name_type, parent_type, NULL, 0, node);
+
+    // busca en el contexto del padre, su nombre
+    EnvItem *env_item = find_env_item(node->env->parent, this->name, 1, 0);
+    // marca su tipo de retorno
+    env_item->computed_type = this;
+    // marca el tipo del visitor a this
+    v->current_type = this;
+
+    // por cada insruccion(definicion) dentro
+    for (int i = 0; i < node->data.typeDef.body_elements; i++)
+    {
+        ASTNode *child = definitions[i];
+
+        // propaga el contexto y el ambito
+        propagate_env_scope(node, child);
+
+        if (!register_type_member_in_env(node->env, child, this->name))
+        {
+            char *name = child->type == AST_DECL_FUNC ? child->data.func_node.name : child->data.binary_op.left->data.var_name;
+
+            fprintf(stderr, "HAY UNERRROR\n");
+            exit(1);
+        }
+    }
+
+    scope_add_symbol(node->scope, "self", this, NULL, 0);
+    for (int i = 0; i < node->data.typeDef.body_elements; i++)
+    {
+        ASTNode *current = definitions[i];
+        if (current->type == AST_DECL_FUNC)
+        {
+            visit_dec_function(v, current, this);
+        }
+    }
+
+    // obtener los tipos de los argumentos pasados  por argumento
+    TypeValue **args_type = resolve_nodes_type(params, node->data.typeDef.args_count);
+
+    // recorrer los argumentos y analizar sus tipos
+    for (int i = 0; i < node->data.typeDef.args_count; i++)
+    {
+        // obtener el simbolo del paramtro dentro del scope del type
+        Symbol *param = lookup_parameter(node->scope, params[i]->data.var_name);
+
+        // si el tipo del parametro es GENERIC
+        if (compare_types(param->type, &TYPE_GENERIC))
+        {
+
+            // Visitar las definiciones del tipo(cuerpo de la clase)
+            for (int i = 0; i < node->data.typeDef.body_count; i++)
+            {
+                accept(v, definitions[i]);
+            }
+
+            // si sigue sin inferirse el tipo del parametro : ERROR
+            if (compare_types(param->type, &TYPE_GENERIC))
+            {
+                fprintf(stderr, "ERROR NO SE PUEDE INFERIR EL TIPO DEL PARAMETRO");
+                exit(1);
+            }
+        }
+
+        // el tipo asociado no es GENERIC o fue inferido
+        Symbol *def_type = find_type_scopes(node->scope, params[i]->static_type);
+        args_type[i] = def_type ? def_type->type : param->type;
+        node->data.typeDef.args[i]->computed_type = args_type[i];
+    }
+
+    this->def_node = node;
+    this->num_params = node->data.typeDef.args_count;
+    this->argument_types = args_type;
+    scope_add_type(node->scope->parent, this);
+    ich_list = free_inheritance_chain(ich_list);
+    v->current_type = visitor_type;
+}
+
+void visit_type_instance(ASTVisitor *v, ASTNode *node)
+{
+    fprintf(stderr, "Estamos en el type instance\n");
+
+    ASTNode **args = node->data.typeDef.args;
+
+    for (int i = 0; i < node->data.typeDef.args_count; i++)
+    {
+        propagate_env_scope(node, args[i]);
+
+        accept(v, args[i]);
+    }
+
+    // buscar el tipo en el contexto
+    EnvItem *env_item = find_env_item(
+        node->env, node->data.typeDef.name_type, 1, 0);
+
+    // si la encuentra ,vista su decalracion para este bien procesado antes de usarla
+    if (env_item)
+    {
+        accept(v, env_item->usages);
+    }
+
+    // la estrucuta que nos permite buscar todos los nodos que logran unificar
+    UnifiedIndex *unified = try_unified_type(v, args, node->scope, node->data.typeDef.args_count,
+                                             node->data.typeDef.name_type, env_item);
+
+    for(UnifiedIndex* curr = unified;curr;curr = curr->next)
+    {
+        accept(v,args[curr->value]);
+    }
+
+    free_unified_index(unified);
+
+    // obtiene el tipo computado de cada argumento pasado al constructor
+    TypeValue** args_types = resolve_nodes_type(args,node->data.typeDef.args_count);
+
+    Function* function = malloc(sizeof(Function));
+    function->name = node->data.typeDef.name_type;
+    function->count_args = node->data.typeDef.args_count;
+    function->args_types = args_types;
+
+    Function * dec = NULL;
+
+    if(env_item)
+    {
+        TypeValue** dec_args_types = resolve_nodes_type(
+            env_item->usages->data.typeDef.args, 
+            env_item->usages->data.typeDef.args_count
+        );
+
+        dec = malloc(sizeof(Function));
+        dec->name = env_item->usages->data.typeDef.name_type;
+        dec->count_args = env_item->usages->data.typeDef.args_count;
+        dec->args_types = dec_args_types;
+        dec->result_types = env_item->computed_type;
+    }
+
+
+    // FuncStructure* funcData = find_type_data(node->scope, f, dec);
+
+    // if (funcData->func && funcData->func->result_type) {
+    //     node->return_type = funcData->func->result_type;
+    // } else if (funcData->func) {
+    //     node->return_type = create_new_type(
+    //         node->data.type_node.name, NULL, NULL, 0, item->declaration
+    //     );
+    // }
+
+    // if (!funcData->state->matched) {
+    //     if (!funcData->state->same_name) {
+    //         node->return_type = &TYPE_ERROR;
+    //         report_error(
+    //             v, "Undefined type '%s'. Line: %d.",
+    //             node->data.type_node.name, node->line
+    //         );
+
+    //     } else if (!funcData->state->same_count) {
+    //         report_error(
+    //             v, "Constructor of type '%s' receives %d argument(s),"
+    //             " but %d was(were) given. Line: %d.",
+    //             node->data.type_node.name, funcData->state->arg1_count, 
+    //             funcData->state->arg2_count, node->line
+    //         );
+    //     } else {
+    //         if (!strcmp(funcData->state->type2_name, "Error"))
+    //             return;
+
+    //         report_error(
+    //             v, "Constructor of type '%s' receives '%s', not '%s' as argument %d. Line: %d.",
+    //             node->data.type_node.name, funcData->state->type1_name, 
+    //             funcData->state->type2_name, funcData->state->pos, node->line
+    //         );
+    //     }
+    // }
+
+    // free_tuple(funcData->state);
+    free(args_types);
+    free(function);
+    
+
+}
+
+void visit_getter(ASTVisitor *v, ASTNode *node)
+{
+    // el objetio del cual se quiere acceder a un aributo o metodo
+    ASTNode *instance = node->data.binary_op.left;
+
+    // el atributo o metodo que se quiere acceders
+    ASTNode *member = node->data.binary_op.right;
+
+    // propagar el scope y el entorno
+    propagate_env_scope(node, instance);
+    propagate_env_scope(node, member);
+
+    // visitar el instancia y determinar su tipo
+    accept(v, instance);
+    TypeValue *instance_type = resolve_node_type(instance);
+
+    // si no se puede determinar el tipo de la instancia
+    if (compare_types(instance_type, &TYPE_ERROR))
+    {
+        node->computed_type = &TYPE_ERROR;
+        return;
+    }
+
+    // si se intenta acceder a un atributo directamente desde fuera del tipo
+    // no usndo "self" y el atributo no es accesible , ERROR
+    if (member->type == AST_VAR && ((
+                                        instance->type == AST_VAR &&
+                                        strcmp(instance->data.var_name, "self")
+
+                                            ) ||
+                                    instance_type != AST_VAR))
+    {
+        fprintf(stderr, "ERRROR GRANDEEEE\n");
+        node->computed_type = &TYPE_ERROR;
+        exit(1);
+    }
+
+    // si el miemebro es una variable
+
+    else if (member->type == AST_VAR)
+    {
+        // _(tipo de la instancia)_(nombre de la variable)
+        member->data.var_name = generate_underscored_name(instance_type->name, member->data.var_name);
+
+        // buscar atributo en la tabla de simbolo
+        Symbol *sym = lookup_type_attr(instance_type, member->data.var_name);
+
+        if (sym)
+        {
+            member->computed_type = sym->type;
+            member->param = sym->param;
+            member->usages = sym->usage;
+        }
+
+        else
+        {
+            EnvItem *env_item = lookup_type_member_recursive(
+                instance_type->def_node->env,
+                member->data.var_name,
+                instance_type, 0);
+
+            if (!env_item)
+            {
+                // ERROR
+                fprintf(stderr, "EERRORR\n");
+                member->computed_type = &TYPE_ERROR;
+                exit(1);
+            }
+
+            else
+            {
+                accept(v, env_item->usages);
+
+                sym = lookup_type_attr(instance_type, member->data.var_name);
+                member->computed_type = sym->type;
+                member->param = sym->param;
+                member->usages = sym->usage;
+            }
+        }
+    }
+
+    // si es una llamada de funcion y no es un error
+    if (member->type == AST_CALL_FUNC && !compare_types(instance_type, &TYPE_ERROR))
+    {
+        Symbol *new_symb = find_type_scopes(node->scope, instance_type->name);
+
+        if (new_symb)
+        {
+            instance_type = new_symb->type;
+        }
+        else
+        {
+            EnvItem *new_item = find_env_item(node->env, instance_type->name, 1, 0);
+
+            accept(v, new_item->usages);
+
+            instance_type = new_item->computed_type;
+        }
+
+        member->data.func_node.name = generate_underscored_name(instance_type->name, member->data.func_node.name);
+
+        visit_call_function(v, member, instance_type);
+    }
+
+    node->computed_type = resolve_node_type(member);
+    node->usages = add_usages(member, node->usages);
+}
+
+void visit_setter(ASTVisitor *v, ASTNode *node)
+{
+    ASTNode *instance = node->data.setter.instance;
+    ASTNode *property = node->data.setter.property;
+    ASTNode *value = node->data.setter.value;
+
+    propagate_env_scope(node, value);
+    propagate_env_scope(node, instance);
+    propagate_env_scope(node, property);
+
+    accept(v, instance);
+
+    TypeValue *instance_type = resolve_node_type(instance);
+
+    if (compare_types(instance_type, &TYPE_ERROR))
+    {
+        node->computed_type = &TYPE_ERROR;
+        return;
+    }
+
+    if ((instance->type == AST_VAR &&
+         strcmp(instance->data.var_name, "self")) ||
+        instance->type != AST_VAR)
+    {
+        fprintf(stderr, "ERROR ASKER \n");
+        node->computed_type = &TYPE_ERROR;
+        return;
+    }
+
+    // prefijar el atributo con el tipo, por ejemplo name -> _User_name
+    property->data.var_name = generate_underscored_name(instance_type->name, property->data.var_name);
+
+    // buscar el simbolo del atributo
+    Symbol *s = lookup_type_attr(instance_type, property->data.var_name);
+
+    // si esta el simbolo del atributo
+    if (s)
+    {
+        // si esta en el scope
+        property->computed_type = s->type;
+        property->param = s->param;
+        property->usages = s->usage;
+    }
+
+    else
+    {
+        // no se enecontro en el scope, buscar en el contexto
+
+        EnvItem *env_item = lookup_type_member_recursive(instance_type->def_node->env, property->data.var_name, instance_type, 0);
+
+        if (env_item)
+        {
+            accept(v, env_item->usages);
+            s = lookup_type_attr(instance_type, property->data.var_name);
+
+            property->computed_type = s->type;
+            property->param = s->param;
+            property->usages = s->usage;
+        }
+
+        else
+        {
+            // error no se encontro en el entorno
+            fprintf(stderr, "No se encontro en el entorno\n");
+            property->computed_type = &TYPE_ERROR;
+            exit(1);
+        }
+    }
+
+    // se visita el valor
+    accept(v, value);
+    TypeValue *inferred_type = resolve_node_type(value);
+
+    if (s)
+    {
+        // compatibilidad de tipos
+        if (ancestor_type(s->type, inferred_type) ||
+            compare_types(inferred_type, &TYPE_GENERIC) ||
+            compare_types(s->type, &TYPE_GENERIC))
+        {
+            if (compare_types(inferred_type, &TYPE_GENERIC) &&
+                !compare_types(s->type, &TYPE_GENERIC))
+            {
+                if (try_unify_operand(v, value, s->type))
+                {
+                    accept(v, value);
+                    inferred_type = s->type;
+                }
+            }
+
+            else if (compare_types(s->type, &TYPE_GENERIC) &&
+                     !compare_types(inferred_type, &TYPE_GENERIC))
+            {
+                s->type = inferred_type;
+
+                foreach_valueList(der, s->usage)
+                {
+                    ASTNode *f = der->node;
+                    if (f && compare_types(f->computed_type, &TYPE_GENERIC))
+                    {
+                        try_unify_operand(v, f, inferred_type);
+                    }
+                }
+            }
+
+            s->usage = add_usages(value, s->usage);
+        }
+
+        // no son compatibles: ERROR
+        else
+        {
+            fprintf(stderr, "Hay un problema de compatibilidad\n");
+            exit(1);
+        }
+    }
+
+    node->computed_type = resolve_node_type(value);
+    node->usages = add_usages(value, node->usages);
+    node->usages = add_usages(property, node->usages);
+}

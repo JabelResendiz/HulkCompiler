@@ -1,0 +1,4 @@
+
+
+
+function f(x) => let y = 12 in x+12-y;

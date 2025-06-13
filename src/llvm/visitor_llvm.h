@@ -23,15 +23,15 @@ typedef struct {
     LLVMValueRef (*binary)(LLVMVisitor*, ASTNode*);
     //LLVMValueRef (*unary)(LLVMVisitor*, ASTNode*);
     LLVMValueRef (*assignment)(LLVMVisitor*, ASTNode*);
-    //LLVMValueRef (*function_call)(Visitor*, ASTNode*);
+    LLVMValueRef (*call_function)(LLVMVisitor*, ASTNode*);
 } LLVM_ExpressionVisitors;
 
 typedef struct {
-    LLVMValueRef (*block)(LLVMVisitor*, ASTNode*);
-    //LLVMValueRef (*function_dec)(Visitor*, ASTNode*);
+    //LLVMValueRef (*block)(LLVMVisitor*, ASTNode*);
+    LLVMValueRef (*dec_function)(LLVMVisitor*, ASTNode*);
     LLVMValueRef (*let_in)(LLVMVisitor*, ASTNode*);
     LLVMValueRef (*conditional)(LLVMVisitor*, ASTNode*);
-    //LLVMValueRef (*loop)(Visitor*, ASTNode*);
+    LLVMValueRef (*while_loop)(LLVMVisitor*, ASTNode*);
 } LLVM_ControlVisitors;
 
 // typedef struct {

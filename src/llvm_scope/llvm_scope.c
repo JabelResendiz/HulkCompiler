@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+// apuntar al ambito activo (el mas interno en al jerarquia anidada)
 static LLVMScope* current_scope  = NULL;
 
 
@@ -20,17 +21,22 @@ void print_scope() {
         printf("Scope %d (Level: %d)\n", depth, depth);
         printf("-------------------\n");
         
+        // obtiene las variables del scope
         ScopeVarEntry* entry = scope->entries;
+
         if (entry == NULL) {
             printf("  (empty)\n");
-        } else {
-            while (entry != NULL) {
+        } 
+        
+        else {
+            while (entry != NULL) { // recorre la lisat de varaibles
                 printf("  Variable: %-15s Alloca: %p\n", 
                       entry->name, (void*)entry->alloca);
                 entry = entry->next;
             }
         }
         
+        // sube al ambito padre
         scope = scope->parent;
         depth++;
         printf("\n");
@@ -57,15 +63,16 @@ void pop_scope(void)
 
     ScopeVarEntry* current = current_scope->entries;
 
+    // Libera todas las variables del ámbito actual.
     while(current)
     {
         ScopeVarEntry* next = current->next;
-        free(current->name);
-        free(current);
+        free(current->name);     
+        free(current);          
         current = next;
     }
 
-
+    // Elimina el ámbito y vuelve al padre.
     LLVMScope* parent = current_scope->parent;
     free(current_scope);
     current_scope = parent;
@@ -77,14 +84,20 @@ LLVMValueRef lookup_variable(const char* name) {
         ScopeVarEntry* entry = scope->entries;
         while (entry) {
             if (strcmp(entry->name, name) == 0) {
-                return entry->alloca;
+                return entry->alloca;    // // Devuelve la referencia LLVM si encuentra la variable.
             }
             entry = entry->next;
         }
+
+        // Sube al ámbito padre.
         scope = scope->parent;
     }
+
+    // No encontró la variable.
     return NULL;
 }
+
+
 
 void declare_variable(const char* name, LLVMValueRef alloca) {
     ScopeVarEntry* entry = malloc(sizeof(ScopeVarEntry));

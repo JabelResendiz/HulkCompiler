@@ -17,7 +17,7 @@ ASTNode *create_binary_op_node(Operator op,
     node->env = create_env(NULL);
     node->computed_type = type;
     node->data.binary_op.name_op = name_op;
-    node->data.binary_op.op = op;
+    node->data.binary_op.op = op; 
     node->data.binary_op.left = left;
     node->data.binary_op.right = right;
 

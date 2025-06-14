@@ -47,6 +47,7 @@ void accept(ASTVisitor* visitor,ASTNode* node)
         visitor->control.while_loop(visitor,node);
         break;
     case AST_DECL_FUNC:
+    fprintf(stderr,"VOY A LLAMAR AL METODO DE DECL_ FUNC\n");
         visitor->control.dec_function(visitor,node);
         break;
 

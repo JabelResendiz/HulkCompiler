@@ -27,11 +27,13 @@ void visit_call_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
     {
         if (type)
         {
-            visit_dec_function(v, env_item->usages, type);
+            check_dec_function(v, env_item->usages, type);
         }
         else
         {
             accept(v, env_item->usages);
+            fprintf(stderr, ">>>>>>>>>>>>>>>>>>>>>\n");
+            fprintf(stderr, "EL nodo %s y valor de retorno es %s\n", node->data.func_node.name, node->computed_type->name);
         }
     }
     /*
@@ -50,12 +52,16 @@ void visit_call_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
         accept(v, args[curr->value]);
     }
 
+    fprintf(stderr, ">>>>>>>>>>>>>>>>>>>>>\n");
+    fprintf(stderr, "2-EL nodo %s y valor de retorno es %s\n", node->data.func_node.name, node->computed_type->name);
+    fprintf(stderr, ">>>>>>>>>>>>>>>>>>>>>\n");
+
     free_unified_index(unified);
 
     // crear un array de tpyes de los argumentos
     TypeValue **types = resolve_nodes_type(args, arg_count);
 
-    Function *f = malloc(sizeof(Function *));
+    Function *f = malloc(sizeof(Function));
 
     f->name = node->data.func_node.name;
     f->count_args = arg_count;
@@ -74,30 +80,45 @@ void visit_call_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
         dec->count_args = env_item->usages->data.func_node.arg_count;
         dec->args_types = dec_args_type;
         dec->result_types = env_item->computed_type ? env_item->computed_type : &TYPE_GENERIC;
+
+        fprintf(stderr, ">>>>>>>>>>>>>>>>>>>>>\n");
+        fprintf(stderr, "3-EL nodo %s y valor de retorno es %s\n", node->data.func_node.name, node->computed_type->name);
+        fprintf(stderr, ">>>>>>>>>>>>>>>>>>>>>\n");
     }
 
-    FuncStructure *func_structure = type ? find_function_in_hierarchy(type, f, dec) : match_function_scope(node->scope, f, dec);
+    FuncStructure *func_structure = type ? find_function_in_hierarchy(type, f, dec)
+                                         : match_function_scope(node->scope, f, dec);
+
+    fprintf(stderr, ">>>>>>>>>>>>>>>>>>>>>\n");
+    fprintf(stderr, "4-EL nodo %s y valor de retorno es %s\n", node->data.func_node.name, node->computed_type->name);
+    fprintf(stderr, ">>>>>>>>>>>>>>>>>>>>>\n");
 
     if (func_structure->function)
     {
         node->computed_type = func_structure->function->result_types;
 
-        fprintf(stderr, "\nLa funcData es %s\n", func_structure->function->name);
+        fprintf(stderr, "\nLa funcData es %s\n", func_structure->function->result_types->name);
     }
+
+
+    fprintf(stderr, ">>>>>>>>>>>>>>>>>>>>>\n");
+    fprintf(stderr, "5-EL nodo %s y valor de retorno es %s\n", node->data.func_node.name, node->computed_type->name);
+    fprintf(stderr, ">>>>>>>>>>>>>>>>>>>>>\n");
+
+
 
     if (!func_structure->state->is_match)
     {
-        fprintf(stderr,"Candela\n");
+        fprintf(stderr, "Candela\n");
         if (!func_structure->state->name_matches)
         {
             node->computed_type = &TYPE_ERROR;
-            fprintf(stderr,"ERROR\n");
+            fprintf(stderr, "ERROR\n");
             exit(1);
-
         }
         else if (!func_structure->state->parameters_matched)
         {
-            fprintf(stderr,"ERROR\n");
+            fprintf(stderr, "ERROR\n");
             exit(1);
         }
         else
@@ -105,7 +126,7 @@ void visit_call_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
             if (!strcmp(func_structure->state->second_type_name, "Error"))
                 return;
 
-            fprintf(stderr,"ERROR\n");
+            fprintf(stderr, "ERROR\n");
             exit(1);
         }
     }
@@ -113,17 +134,19 @@ void visit_call_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
     free(func_structure->state);
     free(types);
     free(f);
-    
+
+    fprintf(stderr, "EL nodo %s y valor de retorno es %s\n", node->data.func_node.name, node->computed_type->name);
 }
 
-
-void visit2_call_function(ASTVisitor * v, ASTNode *node)
+void visit2_call_function(ASTVisitor *v, ASTNode *node)
 {
-    return visit_call_function(v,node,NULL);
+    return visit_call_function(v, node, NULL);
 }
-void visit_dec_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
+
+void check_dec_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
 {
     // type is NULL
+    fprintf(stderr, "estoy en el visit de dec function\n");
 
     if (node->checked)
     {
@@ -234,28 +257,51 @@ void visit_dec_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
     // Validar el cuerpo
     accept(v, body);
 
+    fprintf(stderr, "SE ACABO DE PROCESAR EL CUERPO DE LA FUNCION\n");
     // buscar el entorno asicado al nombre de al funcion
     EnvItem *env_item = !type ? find_env_item(node->env, node->data.func_node.name, 0, 0)
                               : lookup_type_member_recursive(type->def_node->env,
                                                              node->data.func_node.name, type, 1);
-
+    if (env_item == NULL)
+    {
+        fprintf(stderr, "ACASO NO ENTIENDES\n");
+    }
+    fprintf(stderr, "SE BUSCO DE NUEVO LA FUNCION EN EL ENTORNO\n");
     // Infiere el tipo de retorno
     TypeValue *inferred_type_body = resolve_node_type(body);
 
+    fprintf(stderr, "el tipo inferido del cuerpo de la funcion es : %s\n", inferred_type_body->name);
+
     // buscar el tipo de retorno de del nodo
     Symbol *static_type_node = find_type_scopes(node->scope, node->static_type);
+
+    fprintf(stderr, "JABEL RESENDIZ AGUIRRE\n");
+    // fprintf(stderr,"el tipo inferred_type es %s y el tipo static_type_node es %s\n: ",inferred_type_body->name,static_type_node->name);
 
     // si el tipo del cuerpo es GENERIC, pero existe un tipo definido y es posible unficar
     if (compare_types(inferred_type_body, &TYPE_GENERIC) &&
         static_type_node && try_unify_operand(v, body, static_type_node->type))
     {
         // vuelve a analizar el cuerpo para propagar el tipo unificado
-
+        fprintf(stderr, "JABEL RESENDIZ AGUIRRE dentro\n");
         accept(v, body);
         inferred_type_body = static_type_node->type;
     }
 
     // si no hay tipo definido del nodo , pero hay uno en el entorno y hay conflicto con el inferido, ERROR
+
+    if (!static_type_node)
+    {
+        if (env_item->computed_type)
+        {
+            fprintf(stderr, "CUBAAAA\n");
+        }
+
+        fprintf(stderr, "suiza\n");
+    }
+
+    fprintf(stderr, "mexico\n");
+
     if (!static_type_node && env_item->computed_type &&
         !ancestor_type(env_item->computed_type, inferred_type_body) &&
         !ancestor_type(env_item->computed_type, &TYPE_ERROR) &&
@@ -263,10 +309,11 @@ void visit_dec_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
         !ancestor_type(inferred_type_body, &TYPE_GENERIC) &&
         !ancestor_type(inferred_type_body, &TYPE_ERROR))
     {
+        fprintf(stderr, "JABEL RESENDIZ AGUIRRE error\n");
         fprintf(stderr, "Es necesario lanzar un error aqui\n");
         exit(1);
     }
-
+    fprintf(stderr, "JABEL RESENDIZ AGUIRRE final\n");
     // buscar el tipo de entorno anotado (si se escribio uno explicito)
     int flag = 0;
 
@@ -377,9 +424,12 @@ void visit_dec_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
 
         v->current_function = visitor_function;
     }
+
+    fprintf(stderr, "asasdasd :%s y  %s\n", node->data.func_node.name, node->computed_type->name);
+    fprintf(stderr, "EXITO AL DECLARAR UNA FUNCION\n");
 }
 
-void visit2_dec_function(ASTVisitor * v, ASTNode* node)
+void visit_dec_function(ASTVisitor *v, ASTNode *node)
 {
-    return visit_dec_function(v,node,NULL);
+    return check_dec_function(v, node, NULL);
 }

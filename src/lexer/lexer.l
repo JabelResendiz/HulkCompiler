@@ -43,7 +43,7 @@
 "in"            { return IN; }
 ":="            { return DESTRUCTOR; }
 ":"             { return COLON; }    
-"!="            { return NOT_EQUALS;}
+"!="            { return NEQUALS;}
 "!"             { return NOT;}
 "&"             { return AND;}
 "|"             { return OR;}

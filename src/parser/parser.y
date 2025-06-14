@@ -68,7 +68,7 @@
 %left AND
 %left OR
 %left NOT
-%left NOT_EQUALS
+%left NEQUALS
 %left GE GT LE LT EQ
 %left PLUS MINUS
 %left MULT DIVIDE MOD
@@ -148,7 +148,7 @@ expr:
     | expr LT expr                {$$ = create_binary_op_node(OP_LT,"<",$1,$3,&TYPE_BOOLEAN);}
     | expr AND expr               {$$ = create_binary_op_node(OP_AND, "&", $1, $3, &TYPE_BOOLEAN); }
     | expr OR expr                {$$ = create_binary_op_node(OP_OR, "|", $1, $3, &TYPE_BOOLEAN); }
-    | expr NOT_EQUALS expr        {$$ = create_binary_op_node(OP_NEQ, "!=", $1, $3, &TYPE_BOOLEAN); }
+    | expr NEQUALS expr           {$$ = create_binary_op_node(OP_NEQ, "!=", $1, $3, &TYPE_BOOLEAN); }
     | expr PLUS expr              {$$ = create_binary_op_node(OP_ADD,"+",$1,$3,&TYPE_NUM);}
     | expr MINUS expr             {$$ = create_binary_op_node(OP_SUB,"-",$1,$3,&TYPE_NUM);}
     | expr MULT expr              {$$ = create_binary_op_node(OP_MULT,"*",$1,$3,&TYPE_NUM);}
@@ -503,7 +503,7 @@ const char* token_to_str(int token) {
         case AND:          return "'&'"      ; case OR:       return "'|'"         ; case NOT:        return "'!'"     ;
         case EQ:           return "'=='"     ; case GE:       return "'>='"        ; case GT:         return "'>'"     ;
         case LE:           return "'<='"     ; case LT:       return "'<'"         ; case ARROW:      return "=>"      ;
-        case DESTRUCTOR:    return "':='"     ; case NOT_EQUALS: return "'!='"     ; case E:          return "'E'"; 
+        case DESTRUCTOR:    return "':='"     ; case NEQUALS: return "'!='"     ; case E:          return "'E'"; 
         default: return "";
     }
 }

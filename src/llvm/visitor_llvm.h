@@ -1,10 +1,11 @@
 
 // visitor_llvm
 
-#ifndef VISITOR_LLVM
-#define VISITOR_LLVM
+#ifndef VISITOR_LLVM_H
+#define VISITOR_LLVM_H
 
 #include "../ast/ast.h"
+#include "init_codegen.h"
 #include <llvm-c/Core.h>
 #include <string.h>
 
@@ -27,7 +28,7 @@ typedef struct {
 } LLVM_ExpressionVisitors;
 
 typedef struct {
-    //LLVMValueRef (*block)(LLVMVisitor*, ASTNode*);
+    LLVMValueRef (*block)(LLVMVisitor*, ASTNode*);
     LLVMValueRef (*dec_function)(LLVMVisitor*, ASTNode*);
     LLVMValueRef (*let_in)(LLVMVisitor*, ASTNode*);
     LLVMValueRef (*conditional)(LLVMVisitor*, ASTNode*);
@@ -48,15 +49,17 @@ typedef struct {
 // } AttributeVisitors;
 
 // --- Estructura del visitor ---
-struct LLVMVisitor {
+typedef struct LLVMVisitor {
     
+    LLVMCoreContext* ctx;
+
     // Visitadores
     LLVM_BasicVisitors basic;
     LLVM_ExpressionVisitors expr;
     LLVM_ControlVisitors control;
     // TypeVisitors types;
     // AttributeVisitors attrs;
-};
+}LLVMVisitor;
 
 // --- Funciones de utilidades ---
 

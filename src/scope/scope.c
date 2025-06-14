@@ -8,8 +8,6 @@
 #include <stdarg.h>
 #include "../ast/ast.h"
 
-
-
 static FunctionComparisonState *init_state(int matched, int arg1_count, int arg2_count)
 {
     FunctionComparisonState *state = malloc(sizeof(*state));
@@ -296,6 +294,7 @@ static FunctionComparisonState *func_equals(Function *f1, Function *f2)
 
     if (strcmp(f1->name, f2->name))
     {
+        fprintf(stderr,"66666666666666666666\n");
         // si los nombres no son iguales, error
         FunctionComparisonState *state = init_state(0, -1, -1);
         state->name_matches = 0;
@@ -307,8 +306,12 @@ static FunctionComparisonState *func_equals(Function *f1, Function *f2)
         return init_state(0, f1->count_args, f2->count_args);
 
     // comprobar que los tipos de los argumentos sean iguales
-    return compare_argument_types(f1->args_types, f2->args_types, f1->count_args);
+    FunctionComparisonState*s = compare_argument_types(f1->args_types, f2->args_types, f1->count_args);
+
+    return s;
 }
+
+
 
 // Busca una funcion f dentro de un Scope jerarquico, tratando de encontrar una coincidencia con una funcion existente en ese ambito o alguno de sus ancestros
 FuncStructure *match_function_scope(Scope *scope, Function *f, Function *second)
@@ -319,14 +322,16 @@ FuncStructure *match_function_scope(Scope *scope, Function *f, Function *second)
 
     if (!scope)
         return NULL;
-    
+
     int x = 1;
 
     FuncStructure *result = malloc(sizeof(FuncStructure));
 
     Function *current = scope->functions->first;
 
-    for (int i = 0; i < scope->functions->count; ++i)
+    //fprintf(stderr,"el tipo de current es %s\n",current->name);
+
+    for (int i = 0; i < scope->functions->count; i++)
     {
         FunctionComparisonState *aux = func_equals(current, f);
 
@@ -335,6 +340,10 @@ FuncStructure *match_function_scope(Scope *scope, Function *f, Function *second)
         {
             result->function = current;
             result->state = aux;
+
+            fprintf(stderr, "$9999999999999999999999999999999999999999999999999999$$$\n");
+            fprintf(stderr, "El tipo es %s\n", result->function->result_types->name);
+
             return result;
         }
 
@@ -342,8 +351,8 @@ FuncStructure *match_function_scope(Scope *scope, Function *f, Function *second)
         if (aux->name_matches)
         {
             x = 0;
-            if ((!result->state && !aux->parameters_matched ) ||
-                 aux->parameters_matched)
+            if ((!result->state && !aux->parameters_matched) ||
+                aux->parameters_matched)
             {
                 // si no coinciden los argumentos
                 // marca que encontro al menos una y guarda ka mejor coincidencia
@@ -363,27 +372,29 @@ FuncStructure *match_function_scope(Scope *scope, Function *f, Function *second)
         // si encontro una coincidencia exacta arriba o not_found , prefiere el ersutlado del padre
         if (x || data->state->is_match)
             return data;
-        
+
         return result;
     }
 
     // si no encontro nada , pero hay una declaracion de dec
-    if (x && second) {
+    if (x && second)
+    {
         // se compara con f
         result->state = func_equals(second, f);
         result->function = second;
-    } 
-    
-    else if (x) {
+    }
+
+    else if (x)
+    {
         // si no hay dec , devuelve una tupla error
         result->state = init_state(0, -1, -1);
         result->state->name_matches = 0;
     }
 
-    fprintf(stderr,"JABEL RESENDIZ");
-    
+    fprintf(stderr, "$$$$$$$$$$$$$$$$\n");
+    fprintf(stderr, "El tipo es %s\n", result->function->result_types->name);
+
     return result;
-    
 }
 
 // Compara los arguemntos de arg1 y de arg2 para ver si son de tipos compatibles
@@ -411,6 +422,7 @@ FunctionComparisonState *compare_argument_types(TypeValue **args1, TypeValue **a
     }
 
     // exito
+        fprintf(stderr,"444444444444444444444\n");
     *state = (FunctionComparisonState){
         .is_match = 1,
         .name_matches = 1,
@@ -418,6 +430,7 @@ FunctionComparisonState *compare_argument_types(TypeValue **args1, TypeValue **a
         .current_parameter_index = -1,
         .first_type_name = "",
         .second_type_name = ""};
+
     return state;
 }
 
@@ -569,7 +582,7 @@ char *generate_underscored_name(const char *prefix, const char *base)
     return result;
 }
 
-/// @brief Busca un EnvItem* dentro de un ENv que contenga un node (usage) con cierto nombre y luego como se puede mejorar y renombrar 
+/// @brief Busca un EnvItem* dentro de un ENv que contenga un node (usage) con cierto nombre y luego como se puede mejorar y renombrar
 /// @param env
 /// @param name
 /// @param is_function

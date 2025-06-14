@@ -1,10 +1,32 @@
-# Definir códigos de color
-RED := \033[31m
+
 GREEN := \033[32m
-YELLOW := \033[33m
 BLUE := \033[34m
+RED := \033[31m
+YELLOW := \033[33m
 CYAN := \033[36m
 RESET := \033[0m
+
+# Mensajes de estado
+define MSG_COMPILING
+$(CYAN)🛠️  Compilando $< a $@...$(RESET)
+endef
+
+define MSG_LINKING
+$(BLUE)🔗 Enlazando $@...$(RESET)
+endef
+
+define MSG_SUCCESS
+$(GREEN)✅ Éxito: Build completado$(RESET)
+endef
+
+define MSG_CLEANING
+$(YELLOW)🧹 Limpiando archivos generados...$(RESET)
+endef
+
+define MSG_ERROR
+$(RED)❌ Error:
+endef
+
 
 CC = clang
 CFLAGS = -Wall -g -I. $(shell llvm-config --cflags) -O0
@@ -27,55 +49,70 @@ LLVM_SCOPE_DIR = llvm_scope
 VISITOR_DIR = visitor
 SCOPE_DIR = scope
 UTILS_DIR = utils
+ERROR_DIR = error
 
 .PHONY: all compile execute clean debug
 
 all: compile
 
 compile: $(EXEC)
+	@printf "$(GREEN)✅ Compilación completada con éxito$(RESET)\n"
+	@printf "$(CYAN)🚀 Ejecutando el compilador HULK...$(RESET)\n\n"
 	@./$(EXEC)
 	
-# Creamos el directorio build si no existe
+# Build the directoru build
 $(BUILD_DIR):
 	@mkdir -p $(BUILD_DIR)
 
-# El directorio build se pone como dependencia order-only (con el símbolo |)
 $(EXEC): lex.yy.o y.tab.o $(AST_DIR)/ast.o $(AST_DIR)/keyword.o \
-	$(AST_DIR)/basic.o $(AST_DIR)/cond_while.o $(AST_DIR)/function.o $(AST_DIR)/op.o $(AST_DIR)/poo.o \
+	$(AST_DIR)/basic.o $(AST_DIR)/cond_while.o $(AST_DIR)/function.o $(AST_DIR)/op.o $(AST_DIR)/oop.o \
 	$(SRC_DIR)/main.o \
     $(LLVM_DIR)/init_codegen.o $(LLVM_DIR)/visitor_llvm.o \
-	$(LLVM_DIR)/codegen.o $(LLVM_SCOPE_DIR)/llvm_scope.o  $(LLVM_DIR)/visitor_llvm.o\
-	$(LLVM_DIR)/llvm_op.o $(LLVM_DIR)/visitor_llvm.o \
+	$(LLVM_DIR)/codegen.o $(LLVM_SCOPE_DIR)/llvm_scope.o $(LLVM_DIR)/codegen_basic.o $(LLVM_DIR)/codegen_function.o\
+	$(LLVM_DIR)/codegen_control.o $(LLVM_DIR)/codegen_op.o\
     $(CHECK_DIR)/typecheck.o  $(CHECK_DIR)/variable_semantic.o $(CHECK_DIR)/function.o $(CHECK_DIR)/cond_while.o\
 	$(CHECK_DIR)/check_semantic.o $(CHECK_DIR)/type_semantic.o $(SCOPE_DIR)/scope.o $(SCOPE_DIR)/inheritance.o $(VISITOR_DIR)/visitor.o \
-	$(UTILS_DIR)/print_utils.o \
+	$(UTILS_DIR)/print_utils.o  $(ERROR_DIR)/error.o\
 	$(AST_DIR)/type.o |$(BUILD_DIR)
 
-	@printf "$(CYAN)🔗 Getting ready...$(RESET)\n";
+	@printf "$(BLUE)🔗 Enlazando objetos...$(RESET)\n"
+	@printf "$(CYAN)🛠️  Construyendo ejecutable final...$(RESET)\n"
 	@$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
-	@printf "$(CYAN)🔄 Compiling...$(RESET)\n";
-
+	@printf "$(GREEN)✨ Ejecutable $(BUILD_DIR)/HULK creado$(RESET)\n\n"
 
 # Reglas para generar el parser y lexer
 y.tab.c y.tab.h: $(PARSER_DIR)/parser.y
-	@printf "$(CYAN)🔄 Generating parser...$(RESET)\n";
-	@$(YACC) $(YFLAGS) $< || (echo "Bison failed to process parser.y"; exit 1)
+	@printf "$(CYAN)📖 Generando parser con Bison...$(RESET)\n"
+	@$(YACC) $(YFLAGS) $< || { printf "$(RED)❌ Error en parser.y$(RESET)\n"; exit 1; }
 
 lex.yy.c: $(LEXER_DIR)/lexer.l y.tab.h
-	@printf "$(CYAN)🔄 Generating lexer...$(RESET)\n";
-	@$(LEX) $(LEXFLAGS) $< || (echo "Flex failed to process lexer.l"; exit 1)
+	@printf "$(CYAN)🔤 Generando lexer con Flex...$(RESET)\n"
+	@$(LEX) $(LEXFLAGS) $< || { printf "$(RED)❌ Error en lexer.l$(RESET)\n"; exit 1; }
 
+## AQUI LOS DE CODEGEN
 $(LLVM_DIR)/visitor_llvm.o: $(LLVM_DIR)/visitor_llvm.c $(LLVM_DIR)/visitor_llvm.h
 	@$(CC) $(CFLAGS) -c $< -o $@
 
 $(LLVM_DIR)/codegen.o: $(LLVM_DIR)/codegen.c $(LLVM_DIR)/codegen.h $(AST_DIR)/ast.h $(LLVM_DIR)/visitor_llvm.h
-	@echo "⚡ Compiling module LLVM..."
+	@echo "⚡ Compilando module LLVM..."
 	@$(CC) $(CFLAGS) -c $< -o $@
 
 $(LLVM_SCOPE_DIR)/llvm_scope.o: $(LLVM_SCOPE_DIR)/llvm_scope.c $(LLVM_SCOPE_DIR)/llvm_scope.h
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-$(LLVM_DIR)/llvm_op.o: $(LLVM_DIR)/llvm_op.c $(LLVM_DIR)/llvm_op.h $(LLVM_DIR)/visitor_llvm.h
+$(LLVM_DIR)codegen_basic/.o: $(LLVM_DIR)/codegen_basic.c
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+$(LLVM_DIR)codegen_control/.o: $(LLVM_DIR)/codegen_control.c
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+$(LLVM_DIR)codegen_function/.o: $(LLVM_DIR)/codegen_function.c
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+# $(LLVM_DIR)codegen_oop/.o: $(LLVM_DIR)/codegen_oop.c
+# 	@$(CC) $(CFLAGS) -c $< -o $@
+
+$(LLVM_DIR)codegen_op/.o: $(LLVM_DIR)/codegen_op.c
 	@$(CC) $(CFLAGS) -c $< -o $@
 
 
@@ -85,6 +122,9 @@ $(AST_DIR)/ast.o: $(AST_DIR)/ast.c $(AST_DIR)/ast.h
 	@$(CC) $(CFLAGS) -c $< -o $@
 
 $(UTILS_DIR)/print_utils.o: $(UTILS_DIR)/print_utils.c $(UTILS_DIR)/print_utils.h
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+$(ERROR_DIR)/error.o: $(ERROR_DIR)/error.c $(ERROR_DIR)/error.h
 	@$(CC) $(CFLAGS) -c $< -o $@
 
 # AQUI VAN LAS DEL DIRECTORIO SE SCOPE
@@ -97,6 +137,9 @@ $(SCOPE_DIR)/inheritance.o: $(SCOPE_DIR)/inheritance.c $(SCOPE_DIR)/inheritance.
 # AQUI VAN LAS DIRECTORIO DE VISITOR
 $(VISITOR_DIR)/visitor.o: $(VISITOR_DIR)/visitor.c $(VISITOR_DIR)/visitor.h
 	@$(CC) $(CFLAGS) -c $< -o $@
+
+
+
 
 # AQUI VAN LAS DIRECTORIO DE AST
 $(AST_DIR)/type.o: $(AST_DIR)/type.c $(AST_DIR)/type.h
@@ -139,36 +182,34 @@ $(CHECK_DIR)/type_semantic.o: $(CHECK_DIR)/type_semantic.c
 	@$(CC) $(CFLAGS) -c $< -o $@
 
 
-# Regla genérica para compilar cualquier archivo .c en .o
 %.o: %.c
-	@printf "$(CYAN)🔨 Compiling $<...$(RESET)\n";
+	@printf "$(CYAN)🔨 Compilando $<...$(RESET)\n";
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-# Objetivo para compilar y ejecutar output.ll, si existe
+
 execute: compile
 	@if [ -s $(BUILD_DIR)/output.ll ]; then \
-		printf "$(CYAN)🔄 Compiling output.ll...$(RESET)\n"; \
-		clang $(BUILD_DIR)/output.ll -o $(BUILD_DIR)/program -lm || { printf "$(RED)❌ clang failed when compiling output.ll$(RESET)\n"; exit 0; }; \
-		printf "\n$(BLUE)------------💻 Executing compiled program------------$(RESET)\n"; \
+		printf "$(CYAN)⚙️  Compilando IR (output.ll) a binario...$(RESET)\n"; \
+		clang $(BUILD_DIR)/output.ll -o $(BUILD_DIR)/program -lm || { \
+			printf "$(RED)❌ Error: Fallo en la compilación del IR. Posibles causas:\n   - Errores en el código generado\n   - Falta vincular bibliotecas$(RESET)\n"; \
+			exit 1; \
+		}; \
+		printf "\n$(GREEN)═══════════ [ EJECUTANDO PROGRAMA ] ═══════════$(RESET)\n"; \
 		$(BUILD_DIR)/program; \
 	else \
-		printf "$(YELLOW)⚠️  output.ll does not exist or is empty - nothing to be executed$(RESET)\n"; \
+		printf "$(YELLOW)⚠️  Advertencia: No hay código para ejecutar.$(RESET)\n"; \
+		printf "$(YELLOW)   Archivo output.ll no existe o está vacío.$(RESET)\n"; \
+		printf "$(YELLOW)   Posibles causas:\n"; \
+		printf "$(YELLOW)   - El programa no generó código LLVM\n"; \
+		printf "$(YELLOW)   - Hubo errores en la compilación$(RESET)\n\n"; \
 	fi
 
-# Debugging con gdb
-debug:
-	@gdb $(BUILD_DIR)/HULK
-    # run, backtrace
-
-# Regla para limpiar todos los archivos generados
 clean:
-	@echo "$(CYAN)🧹 Cleaning project...$(RESET)"
-	@rm -rf $(BUILD_DIR)
-	@rm -f *.o $(EXEC) y.tab.* lex.yy.c *.output y.* output.ll program
-	@rm -f $(AST_DIR)/*.o
-	@rm -f $(LLVM_DIR)/*.o
-	@rm -f $(CHECK_DIR)/*.o
-	@rm -f $(LLVM_SCOPE_DIR)/*.o
-	@rm -f $(VISITOR_DIR)/*.o
-	@rm -f $(SCOPE_DIR)/*.o
-	
+	@printf "$(YELLOW)🧹 Limpiando proyecto...$(RESET)\n"
+	@printf "$(BLUE)   Eliminando:\n"
+	@printf "   - Objetos y ejecutables\n"
+	@printf "   - Archivos temporales$(RESET)\n"
+	@rm -rf $(BUILD_DIR) *.o $(EXEC) y.tab.* lex.yy.c *.output y.* output.ll program
+	@rm -f $(AST_DIR)/*.o $(LLVM_DIR)/*.o $(CHECK_DIR)/*.o $(LLVM_SCOPE_DIR)/*.o \
+	       $(VISITOR_DIR)/*.o $(SCOPE_DIR)/*.o $(UTILS_DIR)/*.o
+	@printf "$(GREEN)✔️  Proyecto limpio$(RESET)\n"

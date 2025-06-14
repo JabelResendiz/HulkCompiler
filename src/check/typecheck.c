@@ -58,7 +58,7 @@ void visit_string(ASTVisitor* v, ASTNode* node) {
 void visit_binary_op(ASTVisitor *v, ASTNode *node)
 {
 
-    // fprintf(stderr,"888888888888888888888888\n");
+    fprintf(stderr,"888888888888888888888888\n");
     ASTNode *left = node->data.binary_op.left;
     ASTNode *right = node->data.binary_op.right;
 
@@ -85,11 +85,18 @@ void visit_binary_op(ASTVisitor *v, ASTNode *node)
     TypeValue *type_left = resolve_node_type(left);
     TypeValue *type_right = resolve_node_type(right);
 
+    
+    fprintf(stderr,"El izquiedo es de tipo %s y el derecho es %s y el operador es %s\n", type_left->name, type_right->name,node->data.binary_op.name_op);
+
+    
     if (!match_op(type_left, type_right, node->data.binary_op.op))
     {
         fprintf(stderr, "Error no son del tipo especificado\n");
         exit(1);
     }
+
+    fprintf(stderr,"CON EXITO DE BINARY OP\n");
+    
 }
 
 void visit_block(ASTVisitor *v, ASTNode *node)

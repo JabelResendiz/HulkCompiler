@@ -3,6 +3,7 @@
 
 #include "check_semantic.h"
 #include "../ast/type.h"
+#include "../error/error.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -34,7 +35,7 @@ int make_checker(ASTNode *node)
                     .let_in = visit_let,
                     .conditional = visit_conditional,
                     .while_loop = visit_while_loop,
-                    .dec_function = visit2_dec_function},
+                    .dec_function = visit_dec_function},
             .types =
                 {
                     .type_dec = visit_type_dec,
@@ -51,8 +52,13 @@ int make_checker(ASTNode *node)
             .current_type = NULL};
 
     accept(&visitor, node);
+    
+    ERROR* e = error_to_string(visitor.errors,visitor.error_count);
 
-    return 0;
+    print_error_structure(e);
+    free_semantic_error(e);
+    
+    return visitor.error_count;
 }
 
 // averigua el tipo real (si esta definido en el programa se crea)
@@ -113,31 +119,64 @@ int create_env_item(Env *env, ASTNode *node, char *name, int is_type_decl)
 /// @return Devuelve un ptro EnvItem* si encuentra o NULL
 EnvItem *find_env_item(Env *env, char *name, int is_type, int var)
 {
+    fprintf(stderr,"Voy a buscar %s que es tipo: %d y es un var %d\n", name,is_type,var);
+
     if (!env)
-        return NULL;
-
-    for (Env *env_curr = env; env_curr; env_curr = env_curr->parent)
     {
-        for (EnvItem *curr = env->start; curr; curr = curr->next)
-        {
-            if (
-                // buscar una funcion
-                (!is_type && !var && curr->usages->type == AST_DECL_FUNC &&
-                 !strcmp(curr->usages->data.func_node.name, name)) ||
-
-                // buscar un tipo
-                (is_type && !var && curr->usages->type == AST_TYPE &&
-                 !strcmp(curr->usages->data.typeDef.name_type, name)) ||
-
-                // buscar una variabel
-                (var && curr->usages->type == AST_ASSIGNMENT &&
-                 !strcmp(curr->usages->data.binary_op.left->data.var_name, name)))
-            {
-                return curr;
-            }
-        }
+        fprintf(stderr,"CUBAAAA\n");
+        return NULL;
     }
+        
 
+    // for (Env *env_curr = env; env_curr; env_curr = env_curr->parent)
+    // {
+    //     for (EnvItem *curr = env->start; curr; curr = curr->next)
+    //     {
+    //         if (
+    //             // buscar una funcion
+    //             (!is_type && !var && curr->usages->type == AST_DECL_FUNC &&
+    //              !strcmp(curr->usages->data.func_node.name, name)) ||
+
+    //             // buscar un tipo
+    //             (is_type && !var && curr->usages->type == AST_TYPE &&
+    //              !strcmp(curr->usages->data.typeDef.name_type, name)) ||
+
+    //             // buscar una variabel
+    //             (var && curr->usages->type == AST_ASSIGNMENT &&
+    //              !strcmp(curr->usages->data.binary_op.left->data.var_name, name)))
+    //         {
+    //             fprintf(stderr,"La encontre por dios\n");
+    //             return curr;
+    //         }
+    //     }
+    // }
+
+    // fprintf(stderr,"No esta en el entorno\n");
+    // return NULL;
+
+
+    EnvItem* current = env->start;
+    int i = 0;
+    while (i < env->env_count) {
+        if ((!is_type && !var && current->usages->type == AST_DECL_FUNC &&
+            !strcmp(current->usages->data.func_node.name, name)) ||
+            (is_type && !var && current->usages->type == AST_TYPE &&
+            !strcmp(current->usages->data.typeDef.name_type, name)) ||
+            (var && current->usages->type == AST_ASSIGNMENT &&
+            !strcmp(current->usages->data.binary_op.left->data.var_name, name))
+        ) {
+            fprintf(stderr,"CUBAAAA\n");
+            return current;
+        }
+        current = current->next;
+        i++;
+    }
+    
+    if (env->parent) {
+        return find_env_item(env->parent, name, is_type, var);
+    }
+    
+    fprintf(stderr,"No esta en el entorno\n");
     return NULL;
 }
 

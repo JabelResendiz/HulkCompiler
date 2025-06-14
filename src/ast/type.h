@@ -4,16 +4,6 @@
 #ifndef TYPE_H
 #define TYPE_H
 
-// typedef enum
-// {
-//     TYPE_NUM,
-//     TYPE_STRING,
-//     TYPE_BOOLEAN,
-//     TYPE_VOID,
-//     TYPE_OBJ,
-//     TYPE_UNKNOWN
-// }ValueType;
-
 
 typedef enum
 {

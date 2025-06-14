@@ -1,3 +1,6 @@
 
 
-let a = 42 in if(a %2==0) print(12) else print(23);
+
+function tan() => 12;
+
+tan();

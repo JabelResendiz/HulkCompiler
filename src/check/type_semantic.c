@@ -272,7 +272,7 @@ void visit_type_dec(ASTVisitor *v, ASTNode *node)
         ASTNode *current = definitions[i];
         if (current->type == AST_DECL_FUNC)
         {
-            visit_dec_function(v, current, this);
+            check_dec_function(v, current, this);
         }
     }
 

@@ -20,8 +20,8 @@ void visit_let(ASTVisitor *v, ASTNode *node);
 void visit_assignment(ASTVisitor *v, ASTNode *node);
 void visit2_call_function(ASTVisitor *v, ASTNode *node);
 void visit_call_function(ASTVisitor* v,ASTNode* node,TypeValue* type);
-void visit2_dec_function(ASTVisitor *v, ASTNode *node);
-void visit_dec_function(ASTVisitor *v, ASTNode *node, TypeValue *type);
+void visit_dec_function(ASTVisitor *v, ASTNode *node);
+void check_dec_function(ASTVisitor *v, ASTNode *node, TypeValue *type);
 void visit_conditional(ASTVisitor *v, ASTNode *node);
 void visit_while_loop(ASTVisitor *v, ASTNode *node);
 void visit_type_dec(ASTVisitor *v, ASTNode *node);
@@ -69,4 +69,6 @@ void initialize_program_environment(ASTVisitor *v, ASTNode *node);
 void propagate_env_scope(ASTNode *node, ASTNode *child);
 
 EnvItem *find_env_item(Env *env, char *name, int is_type, int var);
+
+
 #endif

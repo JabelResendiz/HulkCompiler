@@ -8,7 +8,7 @@
 #include "../llvm_scope/llvm_scope.h"
 #include <stdio.h>
 #include <string.h>
-#include "../ast/type.h"
+#include "../type_value/type.h"
 
 // Convierte un tipo personalizado de HULK a su equivalente en LLVM (LLVMTypeRef)
 LLVMTypeRef type_to_llvm(TypeValue *type)

@@ -4,10 +4,12 @@
 #include "check_semantic.h"
 #include "../scope/scope.h"
 #include "../ast/keyword.h"
+#include "../scope/unifiedIndex.h"
 #include <string.h>
 
-void visit_call_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
+void check_call_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
 {
+
     ASTNode **args = node->data.func_node.args;
 
     // 1. Verificamos los argumentos
@@ -61,6 +63,7 @@ void visit_call_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
     // crear un array de tpyes de los argumentos
     TypeValue **types = resolve_nodes_type(args, arg_count);
 
+    
     Function *f = malloc(sizeof(Function));
 
     f->name = node->data.func_node.name;
@@ -84,8 +87,17 @@ void visit_call_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
         fprintf(stderr, ">>>>>>>>>>>>>>>>>>>>>\n");
         fprintf(stderr, "3-EL nodo %s y valor de retorno es %s\n", node->data.func_node.name, node->computed_type->name);
         fprintf(stderr, ">>>>>>>>>>>>>>>>>>>>>\n");
+
+        fprintf(stderr,"el tipo de retorno de dec  es %s\n",dec->result_types->name);
     }
 
+    if(type)
+    {
+        fprintf(stderr,"EL TYPE NO ES NULO\n");
+
+    }
+
+    
     FuncStructure *func_structure = type ? find_function_in_hierarchy(type, f, dec)
                                          : match_function_scope(node->scope, f, dec);
 
@@ -138,9 +150,9 @@ void visit_call_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
     fprintf(stderr, "EL nodo %s y valor de retorno es %s\n", node->data.func_node.name, node->computed_type->name);
 }
 
-void visit2_call_function(ASTVisitor *v, ASTNode *node)
+void visit_call_function(ASTVisitor *v, ASTNode *node)
 {
-    return visit_call_function(v, node, NULL);
+    return check_call_function(v, node, NULL);
 }
 
 void check_dec_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
@@ -414,9 +426,13 @@ void check_dec_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
 
         // agregar la funcion al scope
 
-        scope_add_function(node->scope, node->data.func_node.arg_count,
+        scope_add_function(node->scope->parent, node->data.func_node.arg_count,
                            args_type, inferred_type_body, node->data.func_node.name);
 
+        Function* r = node->scope->parent->functions->first;
+
+        fprintf(stderr,"!!!!!!!!!!!!!!!!!!!! %s\n",r->name);
+    
         body->computed_type = inferred_type_body;
 
         if (flag)
@@ -426,6 +442,7 @@ void check_dec_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
     }
 
     fprintf(stderr, "asasdasd :%s y  %s\n", node->data.func_node.name, node->computed_type->name);
+    
     fprintf(stderr, "EXITO AL DECLARAR UNA FUNCION\n");
 }
 

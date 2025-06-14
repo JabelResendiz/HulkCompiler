@@ -50,6 +50,7 @@ VISITOR_DIR = visitor
 SCOPE_DIR = scope
 UTILS_DIR = utils
 ERROR_DIR = error
+TYPE_DIR = type_value
 
 .PHONY: all compile execute clean debug
 
@@ -65,15 +66,20 @@ $(BUILD_DIR):
 	@mkdir -p $(BUILD_DIR)
 
 $(EXEC): lex.yy.o y.tab.o $(AST_DIR)/ast.o $(AST_DIR)/keyword.o \
-	$(AST_DIR)/basic.o $(AST_DIR)/cond_while.o $(AST_DIR)/function.o $(AST_DIR)/op.o $(AST_DIR)/oop.o \
+	$(AST_DIR)/basic.o $(AST_DIR)/cond_while.o $(AST_DIR)/function.o $(AST_DIR)/op.o $(AST_DIR)/oop.o  \
+	$(TYPE_DIR)/type.o $(TYPE_DIR)/operators.o \
 	$(SRC_DIR)/main.o \
     $(LLVM_DIR)/init_codegen.o $(LLVM_DIR)/visitor_llvm.o \
-	$(LLVM_DIR)/codegen.o $(LLVM_SCOPE_DIR)/llvm_scope.o $(LLVM_DIR)/codegen_basic.o $(LLVM_DIR)/codegen_function.o\
-	$(LLVM_DIR)/codegen_control.o $(LLVM_DIR)/codegen_op.o\
+	$(LLVM_DIR)/codegen.o $(LLVM_DIR)/codegen_basic.o $(LLVM_DIR)/codegen_function.o\
+	$(LLVM_DIR)/codegen_control.o $(LLVM_DIR)/codegen_op.o \
+	$(LLVM_SCOPE_DIR)/llvm_scope.o \
     $(CHECK_DIR)/typecheck.o  $(CHECK_DIR)/variable_semantic.o $(CHECK_DIR)/function.o $(CHECK_DIR)/cond_while.o\
-	$(CHECK_DIR)/check_semantic.o $(CHECK_DIR)/type_semantic.o $(SCOPE_DIR)/scope.o $(SCOPE_DIR)/inheritance.o $(VISITOR_DIR)/visitor.o \
+	$(CHECK_DIR)/check_semantic.o $(CHECK_DIR)/type_semantic.o \
+	$(SCOPE_DIR)/scope.o $(SCOPE_DIR)/inheritance.o \
+	$(SCOPE_DIR)/env.o $(SCOPE_DIR)/function.o $(SCOPE_DIR)/unifiedIndex.o $(SCOPE_DIR)/usage.o \
+	$(VISITOR_DIR)/visitor.o \
 	$(UTILS_DIR)/print_utils.o  $(ERROR_DIR)/error.o\
-	$(AST_DIR)/type.o |$(BUILD_DIR)
+	|$(BUILD_DIR)
 
 	@printf "$(BLUE)🔗 Enlazando objetos...$(RESET)\n"
 	@printf "$(CYAN)🛠️  Construyendo ejecutable final...$(RESET)\n"
@@ -134,16 +140,33 @@ $(SCOPE_DIR)/scope.o: $(SCOPE_DIR)/scope.c $(SCOPE_DIR)/scope.h
 $(SCOPE_DIR)/inheritance.o: $(SCOPE_DIR)/inheritance.c $(SCOPE_DIR)/inheritance.h
 	@$(CC) $(CFLAGS) -c $< -o $@
 
+$(SCOPE_DIR)/env.o: $(SCOPE_DIR)/env.c $(SCOPE_DIR)/env.h
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+$(SCOPE_DIR)/function.o: $(SCOPE_DIR)/function.c $(SCOPE_DIR)/function.h
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+$(SCOPE_DIR)/unifiedIndex.o: $(SCOPE_DIR)/unifiedIndex.c $(SCOPE_DIR)/unifiedIndex.h
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+$(SCOPE_DIR)/usage.o: $(SCOPE_DIR)/usage.c $(SCOPE_DIR)/usage.h
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+
+
 # AQUI VAN LAS DIRECTORIO DE VISITOR
 $(VISITOR_DIR)/visitor.o: $(VISITOR_DIR)/visitor.c $(VISITOR_DIR)/visitor.h
 	@$(CC) $(CFLAGS) -c $< -o $@
 
+$(TYPE_DIR)/type.o: $(TYPE_DIR)/type.c $(TYPE_DIR)/type.h
+	@$(CC) $(CFLAGS) -c $< -o $@
 
+$(TYPE_DIR)/operators.o: $(TYPE_DIR)/operators.c $(TYPE_DIR)/operators.h
+	@$(CC) $(CFLAGS) -c $< -o $@
 
 
 # AQUI VAN LAS DIRECTORIO DE AST
-$(AST_DIR)/type.o: $(AST_DIR)/type.c $(AST_DIR)/type.h
-	@$(CC) $(CFLAGS) -c $< -o $@
+
 
 $(AST_DIR)/keyword.o: $(AST_DIR)/keyword.c $(AST_DIR)/keyword.h
 	@$(CC) $(CFLAGS) -c $< -o $@

@@ -5,7 +5,7 @@
 #define VISITOR_H
 
 #include "../ast/ast.h"
-#include "../ast/type.h"
+#include "../type_value/type.h"
 #include "../scope/scope.h"
 
 #include <stdio.h>

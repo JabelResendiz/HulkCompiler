@@ -1,6 +1,9 @@
 
+type Point
+{
+
+   f(x: Number)=> 12;
+}
 
 
-function tan() => 12;
-
-tan();
+let q = new Point() in print(q.f(89));

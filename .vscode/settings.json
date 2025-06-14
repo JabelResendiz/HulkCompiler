@@ -89,7 +89,8 @@
         "typeinfo": "cpp",
         "valarray": "cpp",
         "variant": "cpp",
-        "llvm_scope.h": "c"
+        "llvm_scope.h": "c",
+        "print_utils.h": "c"
     },
     "C_Cpp.default.compilerPath": "/usr/bin/gcc"
 }

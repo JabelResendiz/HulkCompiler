@@ -6,7 +6,17 @@
 #include <string.h>
 #include "ast.h"
 
+/// @brief Usado para propagar el entorno y el scope al hijo
+/// @param node
+/// @param child
+void propagate_env_scope(ASTNode *node, ASTNode *child)
+{
+    if (!node || !child)
+        return;
 
+    child->scope->parent = node->scope;
+    child->env->parent = node->env;
+}
 
 void free_ast(ASTNode *node)
 {

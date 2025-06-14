@@ -2,7 +2,7 @@
 
 // type.c
 
-#include "type.h"
+#include "../ast/ast.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -14,56 +14,6 @@ TypeValue TYPE_BOOLEAN = {"Boolean", NULL, &TYPE_OBJ, NULL, NULL, 0};
 TypeValue TYPE_VOID = {"Void", NULL, &TYPE_OBJ, NULL, NULL, 0};
 TypeValue TYPE_ERROR = {"Error", NULL, NULL, NULL, NULL, 0};
 TypeValue TYPE_GENERIC = {"Generic", NULL, NULL, NULL, NULL, 0};
-
-OperatorRule operatorRules[] =
-    {
-        {OP_ADD, &TYPE_NUM, &TYPE_NUM, &TYPE_NUM},
-        {OP_SUB, &TYPE_NUM, &TYPE_NUM, &TYPE_NUM},
-        {OP_MULT, &TYPE_NUM, &TYPE_NUM, &TYPE_NUM},
-        {OP_DIV, &TYPE_NUM, &TYPE_NUM, &TYPE_NUM},
-        {OP_POW, &TYPE_NUM, &TYPE_NUM, &TYPE_NUM},
-        {OP_MOD, &TYPE_NUM, &TYPE_NUM, &TYPE_NUM},
-
-        {OP_CONCAT, &TYPE_STRING, &TYPE_STRING, &TYPE_STRING},
-        {OP_CONCAT, &TYPE_NUM, &TYPE_STRING, &TYPE_STRING},
-        {OP_CONCAT, &TYPE_STRING, &TYPE_NUM, &TYPE_STRING},
-        {OP_DCONCAT, &TYPE_NUM, &TYPE_STRING, &TYPE_STRING},
-        {OP_DCONCAT, &TYPE_STRING, &TYPE_STRING, &TYPE_STRING},
-        {OP_DCONCAT, &TYPE_STRING, &TYPE_NUM, &TYPE_STRING},
-
-        {OP_AND, &TYPE_BOOLEAN, &TYPE_BOOLEAN, &TYPE_BOOLEAN},
-        {OP_OR, &TYPE_BOOLEAN, &TYPE_BOOLEAN, &TYPE_BOOLEAN},
-        {OP_NEQ, &TYPE_BOOLEAN, &TYPE_BOOLEAN, &TYPE_BOOLEAN},
-        {OP_NEQ, &TYPE_NUM, &TYPE_NUM, &TYPE_BOOLEAN},
-        {OP_NEQ, &TYPE_STRING, &TYPE_STRING, &TYPE_BOOLEAN},
-
-        {OP_GT, &TYPE_NUM, &TYPE_NUM, &TYPE_BOOLEAN},
-        {OP_GE, &TYPE_NUM, &TYPE_NUM, &TYPE_BOOLEAN},
-        {OP_LT, &TYPE_NUM, &TYPE_NUM, &TYPE_BOOLEAN},
-        {OP_LE, &TYPE_NUM, &TYPE_NUM, &TYPE_BOOLEAN},
-        {OP_EQ, &TYPE_NUM, &TYPE_NUM, &TYPE_BOOLEAN},
-        {OP_EQ, &TYPE_STRING, &TYPE_STRING, &TYPE_BOOLEAN},
-        {OP_LT, &TYPE_BOOLEAN, &TYPE_BOOLEAN, &TYPE_BOOLEAN},
-};
-
-int rule_count = sizeof(operatorRules) / sizeof(OperatorRule);
-
-int match_op(TypeValue *first, TypeValue *second, Operator op)
-{
-    int rule_count = sizeof(operatorRules) / sizeof(operatorRules[0]);
-
-    for (int i = 0; i < rule_count; i++)
-    {
-        if (compare_types(first, operatorRules[i].left_type) &&
-            compare_types(second, operatorRules[i].right_type) &&
-            op == operatorRules[i].op)
-        {
-            return 1;
-        }
-    }
-
-    return 0;
-}
 
 TypeValue *resolve_op_type(TypeValue *left, TypeValue *right, Operator op)
 {
@@ -80,6 +30,22 @@ TypeValue *resolve_op_type(TypeValue *left, TypeValue *right, Operator op)
 
     return &TYPE_ERROR;
 }
+
+int match_op(TypeValue *first, TypeValue *second, Operator op)
+{
+    for (int i = 0; i < rule_count; i++)
+    {
+        if (compare_types(first, operatorRules[i].left_type) &&
+            compare_types(second, operatorRules[i].right_type) &&
+            op == operatorRules[i].op)
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 
 int compare_types(TypeValue *first, TypeValue *second)
 {
@@ -151,6 +117,7 @@ int ancestor_type(TypeValue *ancestor, TypeValue *type_f)
 //     return &TYPE_ANY;
 // }
 
+// halla el menor ancestro comun de ambos tipos
 TypeValue *compute_lca(TypeValue *type_1, TypeValue *type_2)
 {
     // si alguno es de tipo ANY
@@ -206,3 +173,33 @@ TypeValue *create_type(char *name, TypeValue *type, TypeValue **param_types, int
     new_type->def_node = node;
     return new_type;
 }
+
+// averigua el tipo real (si esta definido en el programa se crea)
+// sino se mantiene el que tiene por defecto
+TypeValue *resolve_node_type(ASTNode *node)
+{
+    TypeValue *type = node->computed_type;
+
+    // cunado permita la creacion de tipos nuevos
+    Symbol *symbol = find_type_scopes(node->scope, type->name);
+
+    if (symbol)
+        return symbol->type;
+
+    return type;
+}
+
+
+// Busca todos los tipos de los argumentos pasados por argumento
+TypeValue **resolve_nodes_type(ASTNode **args, int arg_count)
+{
+    TypeValue **types = malloc(sizeof(TypeValue *) * arg_count);
+
+    for (int i = 0; i < arg_count; i++)
+    {
+        types[i] = resolve_node_type(args[i]);
+    }
+
+    return types;
+}
+

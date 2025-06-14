@@ -3,6 +3,7 @@
 
 
 #include "check_semantic.h"
+#include "../scope/unifiedIndex.h"
 #include <stdio.h>
 
 static int validate_condition(ASTVisitor* v, ASTNode* condition) {

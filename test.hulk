@@ -83,6 +83,9 @@ type C inherits A {
     print(tan(PI) ** 2 + cot(PI) ** 2);
 
     let msg = "Hello World" in print(msg);
+
+
+    //// Revisar esto aqui
     let number = 42, text = "The meaning of life is" in
         print(text @ number);
     let number = 42 in
@@ -93,6 +96,15 @@ type C inherits A {
                 print(text @ number)
             )
         );
+
+    let a = 0 in
+        let b = a := 1 in {
+            print(a);
+            print(b);
+        };
+
+    //////
+
     let a = 6, b = a * 7 in print(b);
     let a = 6 in
         let b = a * 7 in
@@ -112,16 +124,8 @@ type C inherits A {
     let a = 7 in
         let a = 7 * 6 in
             print(a);
-    let a = 0 in {
-        print(a);
-        a := 1;
-        print(a);
-    };
-    let a = 0 in
-        let b = a := 1 in {
-            print(a);
-            print(b);
-        };
+    
+    
     let a = 42 in if (a % 2 == 0) print("Even") else print("odd");
     let a = 42 in print(if (a % 2 == 0) "even" else "odd");
     let a = 42 in

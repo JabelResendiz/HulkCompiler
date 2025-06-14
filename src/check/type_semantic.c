@@ -4,6 +4,7 @@
 
 #include "check_semantic.h"
 #include "../scope/inheritance.h"
+#include "../scope/unifiedIndex.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -14,6 +15,9 @@ InheritanceChain *ich_list;
 
 void visit_type_dec(ASTVisitor *v, ASTNode *node)
 {
+
+    fprintf(stderr,"ABAJO COMUNISMO\n");
+
     // Deteccion de Herencia Circular
     // Previene si el padre esta en la cadena de herencia
     if (find_type_in_inheritance_chain(node->data.typeDef.name_parent, ich_list))
@@ -24,6 +28,7 @@ void visit_type_dec(ASTVisitor *v, ASTNode *node)
         return;
     }
 
+    fprintf(stderr,"ABAJO COMUNISMO\n");
     if (node->checked)
     {
         // si ya se inspecciono el nodo
@@ -37,9 +42,10 @@ void visit_type_dec(ASTVisitor *v, ASTNode *node)
 
     // recoger el ambito del padre
     Scope *parent_scope = node->scope->parent;
-
+    
     // actualizar la lista MRO del padre en la lista
-    ich_list = extend_inheritance_chain(node->data.typeDef.name_parent, ich_list);
+    ich_list = extend_inheritance_chain( ich_list,node->data.typeDef.name_parent);
+
 
     // obtiene los parametros del tipo
     ASTNode **params = node->data.typeDef.args;
@@ -62,6 +68,7 @@ void visit_type_dec(ASTVisitor *v, ASTNode *node)
         }
     }
 
+     
     // Procesa los parametro del tipo
     for (int i = 0; i < node->data.typeDef.args_count; i++)
     {
@@ -72,6 +79,8 @@ void visit_type_dec(ASTVisitor *v, ASTNode *node)
         Symbol *param_type = find_type_scopes(node->scope, params[i]->static_type);
         int flag = 0;
 
+
+      
         // si el tipo esta definido y no se haya encontrado un tipo definido
         if (strcmp(params[i]->static_type, "") && !param_type)
         {
@@ -134,6 +143,11 @@ void visit_type_dec(ASTVisitor *v, ASTNode *node)
     // busqueda del tipo del padre
     Symbol *parent_info = find_type_scopes(node->scope, node->data.typeDef.name_parent);
     TypeValue *parent_type = &TYPE_OBJ;
+    
+
+
+    
+   
 
     // si existe el nombre de padre y no se haya encontrado en el ambito actual
     if (strcmp(node->data.typeDef.name_parent, "") &&
@@ -173,7 +187,7 @@ void visit_type_dec(ASTVisitor *v, ASTNode *node)
             exit(1);
         }
     }
-
+         
     // si existe el nombre del padre y es un tipo del inicial del programa : ERROR
     else if (
         strcmp(node->data.typeDef.name_parent, "") &&
@@ -187,6 +201,9 @@ void visit_type_dec(ASTVisitor *v, ASTNode *node)
     {
         parent_type = parent_info->type;
     }
+
+
+
 
     // si el parent no es de ningun tipo inicial y el hijo no tiene parametros propios
     if (!is_builtin_type(parent_type) && !node->data.typeDef.args_count)
@@ -239,6 +256,8 @@ void visit_type_dec(ASTVisitor *v, ASTNode *node)
 
     ich_list = free_inheritance_chain(ich_list);
 
+
+
     // crea el nuevo tipo
     TypeValue *this = create_type(node->data.typeDef.name_type, parent_type, NULL, 0, node);
 
@@ -249,8 +268,12 @@ void visit_type_dec(ASTVisitor *v, ASTNode *node)
     // marca el tipo del visitor a this
     v->current_type = this;
 
+    
+      
+    fprintf(stderr,"el numero de sintruccione es %d\n", node->data.typeDef.body_count);
+   
     // por cada insruccion(definicion) dentro
-    for (int i = 0; i < node->data.typeDef.body_elements; i++)
+    for (int i = 0; i < node->data.typeDef.body_count; i++)
     {
         ASTNode *child = definitions[i];
 
@@ -259,6 +282,8 @@ void visit_type_dec(ASTVisitor *v, ASTNode *node)
 
         if (!register_type_member_in_env(node->env, child, this->name))
         {
+            fprintf(stderr,"ABAJO COMUNISMO\n");
+    
             char *name = child->type == AST_DECL_FUNC ? child->data.func_node.name : child->data.binary_op.left->data.var_name;
 
             fprintf(stderr, "HAY UNERRROR\n");
@@ -266,8 +291,20 @@ void visit_type_dec(ASTVisitor *v, ASTNode *node)
         }
     }
 
+            
+     
+    for(int i=0;i<node->data.typeDef.body_count;i++)
+    {
+        ASTNode* current = definitions[i];
+        if(current->type == AST_ASSIGNMENT)
+        {
+            accept(v,current);
+        }
+    }
+
+
     scope_add_symbol(node->scope, "self", this, NULL, 0);
-    for (int i = 0; i < node->data.typeDef.body_elements; i++)
+    for (int i = 0; i < node->data.typeDef.body_count; i++)
     {
         ASTNode *current = definitions[i];
         if (current->type == AST_DECL_FUNC)
@@ -275,6 +312,7 @@ void visit_type_dec(ASTVisitor *v, ASTNode *node)
             check_dec_function(v, current, this);
         }
     }
+
 
     // obtener los tipos de los argumentos pasados  por argumento
     TypeValue **args_type = resolve_nodes_type(params, node->data.typeDef.args_count);
@@ -308,6 +346,7 @@ void visit_type_dec(ASTVisitor *v, ASTNode *node)
         args_type[i] = def_type ? def_type->type : param->type;
         node->data.typeDef.args[i]->computed_type = args_type[i];
     }
+        
 
     this->def_node = node;
     this->num_params = node->data.typeDef.args_count;
@@ -339,18 +378,22 @@ void visit_type_instance(ASTVisitor *v, ASTNode *node)
     {
         accept(v, env_item->usages);
     }
-
+    
     // la estrucuta que nos permite buscar todos los nodos que logran unificar
     UnifiedIndex *unified = try_unified_type(v, args, node->scope, node->data.typeDef.args_count,
                                              node->data.typeDef.name_type, env_item);
-
-    for(UnifiedIndex* curr = unified;curr;curr = curr->next)
+        if(unified == NULL)
+        {
+            fprintf(stderr,"unfied es NULL\n");
+        }
+    for(UnifiedIndex* curr = unified;curr != NULL;curr = curr->next)
     {
         accept(v,args[curr->value]);
     }
+       fprintf(stderr,"ABAJO BATISTA\n");
 
     free_unified_index(unified);
-
+       
     // obtiene el tipo computado de cada argumento pasado al constructor
     TypeValue** args_types = resolve_nodes_type(args,node->data.typeDef.args_count);
 
@@ -360,7 +403,7 @@ void visit_type_instance(ASTVisitor *v, ASTNode *node)
     function->args_types = args_types;
 
     Function * dec = NULL;
-
+      
     if(env_item)
     {
         TypeValue** dec_args_types = resolve_nodes_type(
@@ -374,46 +417,35 @@ void visit_type_instance(ASTVisitor *v, ASTNode *node)
         dec->args_types = dec_args_types;
         dec->result_types = env_item->computed_type;
     }
+    
+    FuncStructure* funcData = find_type_data(node->scope, function, dec);
 
+    fprintf(stderr,"ABAJO BATISTA\n");
 
-    // FuncStructure* funcData = find_type_data(node->scope, f, dec);
+    if (funcData->function && funcData->function->result_types) {
+        node->computed_type= funcData->function->result_types;
+    } else if (funcData->function) {
+        node->computed_type = create_type(
+            node->data.typeDef.name_type, NULL, NULL, 0, env_item->usages
+        );
+    }
+        
+    if (!funcData->state->is_match) {
+        if (!funcData->state->name_matches) {
+            node->computed_type = &TYPE_ERROR;
+            fprintf(stderr,"ERROR\n");
 
-    // if (funcData->func && funcData->func->result_type) {
-    //     node->return_type = funcData->func->result_type;
-    // } else if (funcData->func) {
-    //     node->return_type = create_new_type(
-    //         node->data.type_node.name, NULL, NULL, 0, item->declaration
-    //     );
-    // }
+        } else if (!funcData->state->parameters_matched) {
+            fprintf(stderr,"ERROR\n");
+        } else {
+            if (!strcmp(funcData->state->second_type_name, "Error"))
+                return;
 
-    // if (!funcData->state->matched) {
-    //     if (!funcData->state->same_name) {
-    //         node->return_type = &TYPE_ERROR;
-    //         report_error(
-    //             v, "Undefined type '%s'. Line: %d.",
-    //             node->data.type_node.name, node->line
-    //         );
-
-    //     } else if (!funcData->state->same_count) {
-    //         report_error(
-    //             v, "Constructor of type '%s' receives %d argument(s),"
-    //             " but %d was(were) given. Line: %d.",
-    //             node->data.type_node.name, funcData->state->arg1_count, 
-    //             funcData->state->arg2_count, node->line
-    //         );
-    //     } else {
-    //         if (!strcmp(funcData->state->type2_name, "Error"))
-    //             return;
-
-    //         report_error(
-    //             v, "Constructor of type '%s' receives '%s', not '%s' as argument %d. Line: %d.",
-    //             node->data.type_node.name, funcData->state->type1_name, 
-    //             funcData->state->type2_name, funcData->state->pos, node->line
-    //         );
-    //     }
-    // }
-
-    // free_tuple(funcData->state);
+            fprintf(stderr,"ERROR\n");
+        }
+    }
+       
+    free(funcData->state);
     free(args_types);
     free(function);
     
@@ -521,7 +553,7 @@ void visit_getter(ASTVisitor *v, ASTNode *node)
 
         member->data.func_node.name = generate_underscored_name(instance_type->name, member->data.func_node.name);
 
-        visit_call_function(v, member, instance_type);
+        check_call_function(v, member, instance_type);
     }
 
     node->computed_type = resolve_node_type(member);

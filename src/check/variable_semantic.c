@@ -3,6 +3,7 @@
 // variable_semantic.c
 #include "check_semantic.h"
 #include "../ast/keyword.h"
+#include "../scope/unifiedIndex.h"
 #include <string.h>
 
 #define foreach_valueList(elem, list) \

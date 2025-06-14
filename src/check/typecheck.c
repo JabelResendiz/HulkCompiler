@@ -3,7 +3,8 @@
 // typecheck.c
 
 #include "check_semantic.h"
-#include "../ast/type.h"
+#include "../type_value/type.h"
+#include "../scope/unifiedIndex.h"
 #include "../scope/scope.h"
 #include <string.h>
 

@@ -3,8 +3,10 @@
 #ifndef AST_H
 #define AST_H
 
-#include "type.h"
+#include "../type_value/type.h"
 #include "../scope/scope.h"
+#include "../scope/env.h"
+#include "../scope/usage.h"
 
 extern int line_num;
 
@@ -189,5 +191,6 @@ void print_ast(ASTNode* node, int indent);
 void free_ast(ASTNode* node);
 
 
+void propagate_env_scope(ASTNode *node, ASTNode *child);
 
 #endif

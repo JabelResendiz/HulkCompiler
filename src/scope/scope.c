@@ -226,28 +226,38 @@ void free_scope(Scope *scope)
 /// @return El symbol que coincide con el nombre en el Scope (recursivo)
 Symbol *find_type_scopes(Scope *scope, const char *type_name)
 {
+    
+    // si alguno es nulo, retorna NULL
+
     if (!scope || !type_name)
-        return NULL;
-
-    Scope *curr = scope;
-
-    while (curr)
     {
-        Symbol *current = scope->types;
-
-        for (; current; current = current->next)
-        {
-            if (!strcmp(current->name, type_name))
-                return current;
-        }
-
-        curr = curr->parent;
-
+        fprintf(stderr, "es nulo\n");
+        return NULL;
     }
 
+    // fprintf(stderr,"el nombre es : %s\n", name);
+    //  busqueda en el ambito actual
+    Symbol *current = scope->types;
+    int i = 0;
+    while (i < scope->t_count)
+    {
+        if (!strcmp(current->name, type_name))
+        {
+            return current;
+        }
+        current = current->next;
+        i++;
+    }
+
+    // si no se encontro en el ambito actual buscar en el padre
+    if (scope->parent)
+    {
+        return find_type_scopes(scope->parent, type_name);
+    }
+
+    // si no hay padre retornar NULL
     return NULL;
 }
-
 
 /// @brief Busca un parametro en el scope actual y sus ancestros (recursivo)
 /// @param scope El scope donde empieza la busqueda (parecido al scope_lookup)
@@ -271,8 +281,6 @@ Symbol *lookup_parameter(Scope *scope, const char *name)
     return NULL;
 }
 
-
-
 /// @brief Busca un atributo en un type , incluyendo sus padres
 /// @param type El tipo asociado
 /// @param attr_name El nombre del atributo
@@ -293,4 +301,3 @@ Symbol *lookup_type_attr(TypeValue *type, char *attr_name)
 
     return s;
 }
-

@@ -1,37 +1,12 @@
 
-
-
-type A
-{
-    
-}
-
-type Point(x,y)
-{
-    x =0;
-    y =0;
-
-    getX() => self.x;
-    getY() => self.y;
-
-    setX() => self.x := x;
-    setY() => self.y := y;
-    
-}
-
-
-type PolarPoint inherits Point
-{
-    
-}
-
-
-
-type Circunferencia inherits Point
+type Point
 {
 
+   f(x: Number, y: Number)=> x+y-90;
 }
 
+print(let a = new Point() , y =90, x=78 in a.f(12,x+y));
+
+let a= new Point(), y =90, x = y+89 in print(a.f(y,x));
 
 
-let pt = new Point() in 12;

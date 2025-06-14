@@ -1,6 +1,6 @@
 
-
 // variable_semantic.c
+
 #include "check_semantic.h"
 #include "../ast/keyword.h"
 #include "../scope/unifiedIndex.h"
@@ -16,13 +16,17 @@ void visit_let(ASTVisitor *v, ASTNode *node)
 
     propagate_env_scope(node, body);
 
+    // revisar los bindings del bloque let
     for (int i = 0; i < node->data.func_node.arg_count; i++)
     {
         propagate_env_scope(node, bindings[i]);
         accept(v, bindings[i]);
     }
 
+    // visitar el cuerpo del cuerpo
     accept(v, body);
+
+    // el tipo del bloque let es el tipo del cuerpo
 
     node->computed_type = resolve_node_type(body);
 }
@@ -34,15 +38,14 @@ void visit_assignment(ASTVisitor *v, ASTNode *node)
 
     if (match_keyword(left->data.var_name))
     {
-        printf("Keyword '%s' can not be used as a variable name. Line: %d.", left->data.var_name, node->line);
-        exit(1);
+        message_semantic_error(v, "La variable de nombre '%s' es una palabra clave, no puede ser usada para nombrar variables. line %d",
+                               left->data.var_name, node->line);
     }
 
     propagate_env_scope(node, left);
     propagate_env_scope(node, right);
 
     // buscar el tipo definido (estatico de la variable)
-    fprintf(stderr, "el tipo estatico de la variable de tipo es %s\n ", left->static_type);
     Symbol *static_types = find_type_scopes(node->scope, left->static_type);
 
     // flag para saber si luego habra que liberar memorai
@@ -52,44 +55,27 @@ void visit_assignment(ASTVisitor *v, ASTNode *node)
     // tipo el usuario a:T pero T aun no ha sido resuelto
     if (strcmp(left->static_type, "") && !static_types)
     {
-        fprintf(stderr, "***************\n");
-
         EnvItem *env_item = find_env_item(node->env, left->data.var_name, 1, 0);
 
         if (env_item)
         {
-            if (!env_item->usages->checked)
-            {
-                // encontro el tipo en entorno, y asegura entregarlo al entorno actual
-                accept(v, env_item->usages);
+            // encontro el tipo en entorno, y asegura entregarlo al entorno actual
+            accept(v, env_item->usages);
 
-                // intentara buscarlo nuevamente el tipo en el scope
-                static_types = find_type_scopes(node->scope, left->static_type);
-            }
-            else if(env_item->computed_type)
-            {
-                static_types = malloc(sizeof(Symbol));
-                static_types->name = env_item->computed_type->name;
-                static_types->type = env_item->computed_type;
-                flag =1;
-            }
+            // intentara buscarlo nuevamente el tipo en el scope
+            static_types = find_type_scopes(node->scope, left->static_type);
 
             if (!static_types)
             {
-                // si tampoco tuvo suerte esta vez
+                static_types = malloc(sizeof(Symbol));
 
-                // static_types = malloc(sizeof(Symbol));
+                if (env_item->computed_type)
+                {
+                    static_types->name = env_item->computed_type->name;
+                    static_types->type = env_item->computed_type;
+                }
 
-                // if (env_item->computed_type)
-                // {
-                //     static_types->name = env_item->computed_type->name;
-                //     static_types->type = env_item->computed_type;
-                // }
-
-                // flag = 1;
-
-                fprintf(stderr,"Hay un error\n");
-                exit(1);
+                flag = 1;
             }
         }
 
@@ -97,7 +83,8 @@ void visit_assignment(ASTVisitor *v, ASTNode *node)
 
         else
         {
-            fprintf(stderr, "NO se encontro en el contexto , el tipo no esta definido \n");
+            message_semantic_error(v, "La variable '%s' fue definida con tipo '%s' que no es valido. Linea %d",
+                                   left->data.var_name, left->static_type, node->line);
         }
     }
 
@@ -107,13 +94,11 @@ void visit_assignment(ASTVisitor *v, ASTNode *node)
     // se busca resolver el tipo del lado
     TypeValue *inferred_type = resolve_node_type(right);
 
-    fprintf(stderr, "el tipo inferido es %s\n", inferred_type->name);
-
     // si el tipo aun es GENERIC , pero hay un tipo definido (static_type), se intenta unificar el tipo del valor con el esperado
     if (compare_types(inferred_type, &TYPE_GENERIC) &&
         static_types && try_unify_operand(v, right, static_types->type))
     {
-        fprintf(stderr, "))))))))))))))))\n");
+
         // se vuelve a revisar el nodo y buscar el tipo real
         accept(v, right);
         inferred_type = resolve_node_type(right);
@@ -123,17 +108,17 @@ void visit_assignment(ASTVisitor *v, ASTNode *node)
     if (static_types && !ancestor_type(static_types->type, inferred_type))
     {
         // se reporta un error
-
-        fprintf(stderr, "variable fue definido pero no se ha inferido el tipo donde esta\n");
-        exit(1);
+        message_semantic_error(v, "La variable '%s' fue definida como '%s' pero su tipo inferido es '%s'. No son compatible. Linea %d",
+                               left->data.var_name, left->static_type,
+                               inferred_type->name, node->line);
     }
 
     // uso de destructores
 
-     if (strcmp(left->static_type, "") && node->type == AST_DESTRUCTOR)
+    if (strcmp(left->static_type, "") && node->type == AST_DESTRUCTOR)
     {
-        fprintf(stderr,"VARIABLE SNO PUEDEN SER ANOTADAS TIPO \n");
-        exit(1);
+        message_semantic_error(v, "La variable '%s' no puede ser de tipo anotado cuando es reasignada. Linea %d",
+                               left->data.var_name, node->line);
     }
     // se usa el tipo definido como definitivo, sobreescribinedo la inferencia, para garantizar conssitencia
     if (static_types)
@@ -143,10 +128,10 @@ void visit_assignment(ASTVisitor *v, ASTNode *node)
 
     Symbol *s = scope_lookup(node->scope, left->data.var_name);
 
-    if(!s && node->type == AST_DESTRUCTOR)
+    if (!s && node->type == AST_DESTRUCTOR)
     {
-        fprintf(stderr,"Hay cosas por hacer\n");
-        exit(1);
+        message_semantic_error(v, "La variable '%s' necesita ser inicializada en un bloque 'let' antes de ser reasignada. Linea %d",
+                               left->data.var_name, node->line);
     }
 
     // si es una declaracion let , se declara la var en el scope del padre
@@ -169,8 +154,8 @@ void visit_assignment(ASTVisitor *v, ASTNode *node)
     // si hay compatiblidad de tipo (o tipo GENERIC) lo que implica que puedes especializarse
     else if (
         ancestor_type(s->type, &inferred_type) ||
-        ancestor_type(inferred_type, &TYPE_GENERIC) ||
-        ancestor_type(s->type, &TYPE_GENERIC))
+        compare_types(inferred_type, &TYPE_GENERIC) ||
+        compare_types(s->type, &TYPE_GENERIC))
     {
         // si el valor es GENERIC pero el simbolo tiene tipo real
         if (compare_types(inferred_type, &TYPE_GENERIC) &&
@@ -210,34 +195,33 @@ void visit_assignment(ASTVisitor *v, ASTNode *node)
     // si nada de lo anterior es posible entonces es un error de tipo
     else
     {
-        fprintf(stderr, "el tipo asignado no es seguro\n");
-        exit(1);
+        message_semantic_error(v, "La variable '%s' fue inicializada como '%s' pero luego reasignada como '%s' . linea %d",
+                               s->name, s->type->name, inferred_type->name, node->line);
     }
 
     right->computed_type = inferred_type;
 
     // si es tipo reasignacion
-    if (node->type ==AST_DESTRUCTOR)
+    if (node->type == AST_DESTRUCTOR)
     {
         node->computed_type = inferred_type;
     }
     // node->computed_type = inferred_type;
 
-    if(flag) free(static_types);
-    
-    fprintf(stderr, "el tipo del nodo es %s\n", node->computed_type->name);
+    if (flag)
+        free(static_types);
+
+
 }
 
 void visit_variable(ASTVisitor *v, ASTNode *node)
 {
-
-    // Buscar
+    // Buscar la variable en el scope del padre
     Symbol *sym = scope_lookup(node->scope, node->data.var_name);
 
-    // fprintf(stderr," se encontro el simbolo en ")
     if (sym)
     {
-        fprintf(stderr, "\n00000000 - %s - %d\n", sym->name, sym->param);
+        // si la variable se encontro, entonces el bloque varible sera del tipo de la variable
         node->computed_type = sym->type;
         node->param = sym->param;
         node->usages = sym->usage;
@@ -253,12 +237,14 @@ void visit_variable(ASTVisitor *v, ASTNode *node)
 
         if (!item)
         {
+            // si tampoco esta en el entorno
             node->computed_type = &TYPE_ERROR;
-            fprintf(stderr, "Un error grande\n");
-            exit(1);
+            message_semantic_error(v, "La variable '%s' no esta definida en el programa. Line %d",
+                                   node->data.var_name, node->line);
         }
         else
         {
+            // visitar todas las declaraciones
             accept(v, item->usages);
             // se marca el nodo como no revisado para su posterior revisado
             item->usages->checked = 0;
@@ -269,6 +255,4 @@ void visit_variable(ASTVisitor *v, ASTNode *node)
             node->usages = sym->usage;
         }
     }
-    fprintf(stderr, "HAY UN ERROR EN VISIT_VARIABLE\n");
-    exit(1);
 }

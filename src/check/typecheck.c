@@ -12,7 +12,6 @@ void visit_program(ASTVisitor *v, ASTNode *node)
 {
     init(node->scope);
     initialize_program_environment(v, node); // Regsitra funciones/tipos en el contexto global
-    // fprintf(stderr,"++++++++++++++++");
 
     for (int i = 0; i < node->data.program.count; i++)
     {
@@ -23,7 +22,8 @@ void visit_program(ASTVisitor *v, ASTNode *node)
         if (child->type == AST_ASSIGNMENT)
         {
             node->computed_type = &TYPE_ERROR;
-            fprintf(stderr, "ERROR\n");
+            message_semantic_error(v, "Variable '%s' tiene que ser inicializada primero en un bloque 'let-in'. Line %d.",
+                                   child->data.binary_op.left->data.var_name, child->line);
         }
     }
 }
@@ -32,34 +32,33 @@ void visit_number(ASTVisitor *v, ASTNode *node) {}
 
 void visit_boolean(ASTVisitor *v, ASTNode *node) {}
 
-void visit_string(ASTVisitor* v, ASTNode* node) {
-    const char* str = node->data.string_value;
+void visit_string(ASTVisitor *v, ASTNode *node)
+{
+    const char *str = node->data.string_value;
     int i = 0;
 
-    while (str[i] != '\0') {
-        if (str[i] == '\\') {
+    while (str[i] != '\0')
+    {
+        if (str[i] == '\\')
+        {
             char next = str[i + 1];
             if (next == '\0' || !(
-                str[i+1] == 'n' || 
-                str[i+1] == 't' ||
-                str[i+1] == '\\' || 
-                str[i+1] == '\"'
-            )) {
-                fprintf(stderr,"ERROR PARA CONSTRUIR UN STRING\n");
-                exit(1);
+                                    str[i + 1] == 'n' ||
+                                    str[i + 1] == 't' ||
+                                    str[i + 1] == '\\' ||
+                                    str[i + 1] == '\"'))
+            {
+                message_semantic_error(v, "Secuencia de escape invalida '\\%c'. Line %d", str[i + 1], node->line);
             }
-            i++; 
+            i++;
         }
         i++;
     }
 }
 
-
-
 void visit_binary_op(ASTVisitor *v, ASTNode *node)
 {
 
-    fprintf(stderr,"888888888888888888888888\n");
     ASTNode *left = node->data.binary_op.left;
     ASTNode *right = node->data.binary_op.right;
 
@@ -86,18 +85,13 @@ void visit_binary_op(ASTVisitor *v, ASTNode *node)
     TypeValue *type_left = resolve_node_type(left);
     TypeValue *type_right = resolve_node_type(right);
 
-    
-    fprintf(stderr,"El izquiedo es de tipo %s y el derecho es %s y el operador es %s\n", type_left->name, type_right->name,node->data.binary_op.name_op);
-
-    
     if (!match_op(type_left, type_right, node->data.binary_op.op))
     {
-        fprintf(stderr, "Error no son del tipo especificado\n");
-        exit(1);
+        message_semantic_error(v,"Operador '%s' no puede ser usado entre '%s' y '%s'. Line %d",
+                                node->data.binary_op.name_op, type_left->name,type_right->name,node->line);
     }
 
-    fprintf(stderr,"CON EXITO DE BINARY OP\n");
-    
+    fprintf(stderr, "CON EXITO DE BINARY OP\n");
 }
 
 void visit_block(ASTVisitor *v, ASTNode *node)
@@ -111,7 +105,7 @@ void visit_block(ASTVisitor *v, ASTNode *node)
 
     node->checked = 1;
 
-    //itera por las sentencias del bloque
+    // itera por las sentencias del bloque
     ASTNode *curr = NULL;
 
     for (int i = 0; i < node->data.program.count; i++)
@@ -126,8 +120,8 @@ void visit_block(ASTVisitor *v, ASTNode *node)
         if (curr->type == AST_ASSIGNMENT)
         {
             node->computed_type = &TYPE_ERROR;
-            fprintf(stderr, "Hay un Error\n");
-            exit(1);
+            message_semantic_error(v, "Variable '%s' tiene que ser inicializada primero en un bloque 'let-in'. Line %d.",
+                                   curr->data.binary_op.left->data.var_name, curr->line);
         }
     }
 
@@ -140,7 +134,14 @@ void visit_block(ASTVisitor *v, ASTNode *node)
 
     else
     {
-        // si no hay sentencias 
+        // si no hay sentencias
         node->computed_type = &TYPE_VOID;
     }
+
 }
+
+
+// void visit_unary_op(ASTVisitor* v, ASTNode* node)
+// {
+
+// }

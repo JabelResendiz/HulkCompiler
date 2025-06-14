@@ -9,25 +9,10 @@
 
 void free_unified_index(UnifiedIndex *u)
 {
-    fprintf(stderr,"oioioaios\n");
     if(!u) return ;
     free_unified_index(u->next);
     free(u);
-    // fprintf(stderr, "ABAJO BATISTA\n");
-    // if (u && u->next)
-    // {
-    //     fprintf(stderr, "ABAJO BATISTA\n");
-    //     free_unified_index(u->next);
-    // }
-
-    // fprintf(stderr, "ABAJO BATISTA12\n");
-    // if (u== NULL)
-    // {
-    //     fprintf(stderr, "unfied es NULL\n");
-    // }
-    // fprintf(stderr,"no es nulo\n");
-    // free(u);
-    // fprintf(stderr, "ABAJO BATISTA12\n");
+    
 }
 
 /// @brief intenta unifcar un operando con un cierto tipo

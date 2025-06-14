@@ -63,7 +63,8 @@ LLVMCoreContext *llvm_core_context_create()
     ctx->context = LLVMGetGlobalContext();
     ctx->module = LLVMModuleCreateWithNameInContext("program", ctx->context);
     ctx->builder = LLVMCreateBuilderInContext(ctx->context);
-
+    ctx->max_stack_depth = 100000;
+    
     // Inicializar la variable global de profundidad de stack
     ctx->current_stack_depth_var = LLVMAddGlobal(
         ctx->module,

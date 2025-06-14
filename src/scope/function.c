@@ -73,7 +73,9 @@ void free_func_table(FuncTable *table)
 // devuelve una estructura de funcion si f1 y f2 son iguales(nombre, #args, y comparacion de tipos de args)
 FunctionComparisonState *func_equals(Function *f1, Function *f2)
 {
-
+    fprintf(stderr, "los nombre son %s y %s\n", f1->name, f2->name);
+    fprintf(stderr,"los tipos del arguemtno de %s es \n\n\n",f2->args_types[0]->name);
+    
     if (strcmp(f1->name, f2->name))
     {
         FunctionComparisonState *state = init_state(0, -1, -1);
@@ -85,6 +87,9 @@ FunctionComparisonState *func_equals(Function *f1, Function *f2)
     if (f1->count_args != f2->count_args)
         return init_state(0, f1->count_args, f2->count_args);
 
+    fprintf(stderr, "Podria ser aqui\n");
+
+    
     // comprobar que los tipos de los argumentos sean iguales
     FunctionComparisonState *s = compare_argument_types(f1->args_types, f2->args_types, f1->count_args);
 
@@ -94,6 +99,7 @@ FunctionComparisonState *func_equals(Function *f1, Function *f2)
 // Busca una funcion f dentro de un Scope jerarquico, tratando de encontrar una coincidencia con una funcion existente en ese ambito o alguno de sus ancestros
 FuncStructure *match_function_scope(Scope *scope, Function *f, Function *second)
 {
+    fprintf(stderr, "estoy en el match de fucntion scope\n");
 
     if (!second)
         fprintf(stderr, "Sceond es null\n");
@@ -107,17 +113,26 @@ FuncStructure *match_function_scope(Scope *scope, Function *f, Function *second)
 
     Function *current = scope->functions->first;
 
+    //fprintf(stderr,"el tipo de curent es %s\n",current->args_types[0]->name);
+    fprintf(stderr,"\n\n\n\nel tipo de f es %s\n\n\n\n\n", f->args_types[0]->name);
+
     for (int i = 0; i < scope->functions->count; i++)
     {
+        fprintf(stderr,"la funcion current es %s\n\n", current->name);
+        fprintf(stderr,"los tipos del arguemtno de %s es \n\n\n",f->args_types[0]->name);
+    
 
         FunctionComparisonState *aux = func_equals(current, f);
 
+        fprintf(stderr,"el valor de aux es %d\n",aux->is_match);
+        //exit(1);
         // se encontro una funcion que matcheaba bien
         if (aux->is_match)
         {
             result->function = current;
             result->state = aux;
 
+  
             return result;
         }
 
@@ -165,7 +180,7 @@ FuncStructure *match_function_scope(Scope *scope, Function *f, Function *second)
         result->state->name_matches = 0;
     }
 
-
+    fprintf(stderr, "no candeal\n");
     return result;
 }
 
@@ -176,6 +191,9 @@ FunctionComparisonState *compare_argument_types(TypeValue **args1, TypeValue **a
 
     for (int i = 0; i < number_counts; ++i)
     {
+        fprintf(stderr, "el tipo de arg2[%d] es %s\n", i, args2[i]->name);
+        fprintf(stderr, "el tipo de arg1[%d] es %s\n", i, args1[i]->name);
+
         if (!compare_types(args2[i], &TYPE_ERROR) &&
             !compare_types(args2[i], &TYPE_GENERIC) &&
             !ancestor_type(args1[i], args2[i]) &&
@@ -212,19 +230,24 @@ FuncStructure *find_function_in_hierarchy(TypeValue *type, Function *f, Function
 
     if (!type->def_node)
     {
-        FuncStructure *structure = malloc(sizeof(*structure));
+        fprintf(stderr, "es aqui mi compa\n");
+        FuncStructure *structure = malloc(sizeof(FuncStructure));
+        FunctionComparisonState *tuple = init_state(0, -1, -1);
         *structure = (FuncStructure){
             .function = NULL,
-            .state = init_state(0, -1, -1)};
+            .state = tuple};
 
         structure->state->name_matches = 0;
         return structure;
     }
-
+    fprintf(stderr, "NO ES AQUIIII\n");
     FuncStructure *structure = match_function_scope(type->def_node->scope, f, dec);
 
     if (structure && (structure->state->is_match) || structure->state->name_matches)
     {
+        fprintf(stderr, "AQUIIII\n");
+        fprintf(stderr, "el valor de function es %d\n", structure->state->is_match);
+
         return structure;
     }
 
@@ -239,8 +262,6 @@ FuncStructure *find_function_in_hierarchy(TypeValue *type, Function *f, Function
     return structure;
 }
 
-
-
 FuncStructure *find_type_data(Scope *scope, Function *f, Function *dec)
 {
     if (!scope)
@@ -248,7 +269,7 @@ FuncStructure *find_type_data(Scope *scope, Function *f, Function *dec)
         return NULL;
     }
 
-    FuncStructure *result =malloc(sizeof(FuncStructure));
+    FuncStructure *result = malloc(sizeof(FuncStructure));
     int not_found = 1;
 
     if (scope->types)
@@ -261,7 +282,7 @@ FuncStructure *find_type_data(Scope *scope, Function *f, Function *dec)
             current->name = current_sym->name;
             current->count_args = current_sym->type->num_params;
             current->args_types = current_sym->type->argument_types;
-            current->result_types= current_sym->type;
+            current->result_types = current_sym->type;
             FunctionComparisonState *tuple = func_equals(current, f);
             if (tuple->is_match)
             {

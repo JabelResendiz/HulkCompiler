@@ -1,4 +1,7 @@
 
 
 
-while (12 >0) 12;
+
+if( let x= 12 in x > 90) print(89) 
+elif(let x = 23 in x==7) print("alfonso") 
+else print(12 > 8);

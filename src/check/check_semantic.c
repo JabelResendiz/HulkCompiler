@@ -5,11 +5,12 @@
 #include "../ast/ast.h"
 #include "../visitor/visitor.h"
 #include "../scope/env.h"
-#include "../error/error.h"
 #include <stdio.h>
 #include <string.h>
 
-
+/// @brief Crea el visitor del analisis semantico
+/// @param node 
+/// @return 
 int make_checker(ASTNode *node)
 {
 
@@ -54,7 +55,7 @@ int make_checker(ASTNode *node)
     accept(&visitor, node);
     
     ERROR* e = error_to_string(visitor.errors,visitor.error_count);
-
+    
     print_error_structure(e);
     free_semantic_error(e);
     
@@ -74,22 +75,21 @@ void initialize_program_environment(ASTVisitor *v, ASTNode *node)
         switch (child->type)
         {
         case AST_DECL_FUNC:
-            child->env->parent = node->env;
-            child->scope->parent = node->scope;
+            propagate_env_scope(node,child);
 
             if (!create_env_item(node->env, child, child->data.func_node.name, 0))
             {
-                fprintf(stderr, "Ya existe el entorno Item creado\n");
+                message_semantic_error(v,"Funcion '%s' ya existe. Line %d." ,child->data.func_node.name, child->line);
             }
             break;
 
         case AST_TYPE:
-            child->env->parent = node->env;
-            child->scope->parent = node->scope;
+            
+            propagate_env_scope(node,child);
 
             if (!create_env_item(node->env, child, child->data.typeDef.name_type, 1))
             {
-                fprintf(stderr, "Ya existe el entorno Item creado\n");
+                message_semantic_error(v,"Type '%s' ya existe. Line %d." ,child->data.typeDef.name_type, child->line);
             }
             break;
 

@@ -47,7 +47,7 @@ LLVMValueRef codegen_call_function(LLVMVisitor *v, ASTNode *node)
         return codegen_rand(v, node);
     }
 
-    fprintf(stderr, "ando callao\n");
+    fprintf(stderr, "VOY a entrar al codegen_custom_func\n");
     return codegen_custom_func(v, node);
 }
 
@@ -178,139 +178,68 @@ LLVMValueRef codegen_log(LLVMVisitor *v, ASTNode *node)
 LLVMValueRef codegen_custom_func(LLVMVisitor *v, ASTNode *node)
 {
 
-    fprintf(stderr, "ANDAMOS EN EL CODEGEN_CUSTOM_FUNC\n");
-
     const char *name = node->data.func_node.name;
-    int param_count = node->data.func_node.arg_count;
-    TypeValue* return_type = node->computed_type;
-    ASTNode** params = node->data.func_node.args;
+    int arg_count = node->data.func_node.arg_count;
+    ASTNode **args = node->data.func_node.args;
+    TypeValue *return_type = node->computed_type;
 
+    fprintf(stderr, "1-ADNDA MIERDAAA\n");
 
-    LLVMTypeRef ret_type = type_to_llvm(return_type);
-    LLVMTypeRef * param_types = malloc(param_count * sizeof(LLVMTypeRef));
+    LLVMValueRef func = LLVMGetNamedFunction(v->ctx->module, name);
 
-    for(int i=0;i<param_count;i++)
+    if (!func)
     {
-        param_types[i] = type_to_llvm(params[i]->computed_type);
+        fprintf(stderr, "Function '%s' not found.\n", name);
+        exit(1);
     }
 
-    LLVMTypeRef func_type = LLVMFunctionType(ret_type,param_types,param_count,0);
+    fprintf(stderr, "2-ADNDA MIERDAAA\n");
 
-    LLVMValueRef func = LLVMGetNamedFunction(v->ctx->module,name);
-
-    if(!func)
+    LLVMValueRef *arg_values = malloc(sizeof(LLVMValueRef) * arg_count);
+    for (int i = 0; i < arg_count; i++)
     {
-        func = LLVMAddFunction(v->ctx->module,name,func_type);
-
+        arg_values[i] = codegen_accept(v, args[i]);
+        if (!arg_values[i])
+        {
+            fprintf(stderr, "ERROR: arg_values[%d] is NULL\n", i);
+            exit(1);
+        }
     }
 
-    LLVMBasicBlockRef  entry = LLVMAppendBasicBlock(func,"entry");
-    LLVMPositionBuilderAtEnd(v->ctx->builder,entry);
+    fprintf(stderr, "3-ADNDA MIERDAAA\n");
+
+    LLVMTypeRef *param_types = malloc(arg_count * sizeof(LLVMTypeRef));
+    for (int i = 0; i < arg_count; i++)
+    {
+        param_types[i] = type_to_llvm(args[i]->computed_type);
+    }
+
+    fprintf(stderr, "4-ADNDA MIERDAAA\n");
+
+    LLVMTypeRef return_llvm_type = type_to_llvm(return_type);
+    
+    LLVMTypeRef func_type = LLVMFunctionType(return_llvm_type, param_types, arg_count, 0);
+
+    fprintf(stderr, "5-ADNDA MIERDAAA\n");
 
 
+    const char *tmp_name = compare_types(return_type, &TYPE_VOID) ? "" : "calltmp";
 
+    fprintf(stderr, "CHECKER\n");
 
+    
+    LLVMValueRef call = LLVMBuildCall2(
+        v->ctx->builder,
+        func_type,
+        func,
+        arg_values,
+        arg_count,
+        tmp_name);
 
-    // const char *name = node->data.func_node.name;
+    fprintf(stderr, "6-ADNDA MIERDAAA\n");
 
-    // LLVMValueRef func = LLVMGetNamedFunction(v->ctx->module, name);
-    // fprintf(stderr, "Obtenido func: %p (nombre: %s)\n", (void *)func, name);
-
-    // char *type_str = LLVMPrintTypeToString(LLVMTypeOf(func));
-    // fprintf(stderr, "Tipo de '%s': %s\n", name, type_str);
-    // LLVMDisposeMessage(type_str);
-
-    // // LLVMTypeRef func_type = LLVMGetElementType(LLVMTypeOf(func));
-    // LLVMTypeRef func_ptr_type = LLVMTypeOf(func);
-    // if (LLVMGetTypeKind(func_ptr_type) != LLVMPointerTypeKind)
-    // {
-    //     fprintf(stderr, "ERROR: '%s' no es un puntero (esperábamos puntero a función).\n", name);
-    //     exit(1);
-    // }
-
-    // LLVMTypeRef func_type = LLVMGetElementType(func_ptr_type);
-    // if (LLVMGetTypeKind(func_type) != LLVMFunctionTypeKind)
-    // {
-    //     fprintf(stderr, "ERROR: '%s' no es una función.\n", name);
-    //     //exit(1);
-    // }
-
-    // unsigned param_count = LLVMCountParamTypes(func_type);
-
-    // int arg_count = node->data.func_node.arg_count;
-    // ASTNode **args = node->data.func_node.args;
-    // TypeValue *return_type = node->computed_type;
-
-    // fprintf(stderr, "tremenda candela, EL TIPO DE RETURN ES %s\n", return_type->name);
-
-    // // Obtener tipos de los argumentos
-    // LLVMTypeRef *arg_types = malloc(arg_count * sizeof(LLVMTypeRef));
-    // LLVMValueRef *arg_values = malloc(arg_count * sizeof(LLVMValueRef));
-
-    // for (int i = 0; i < arg_count; i++)
-    // {
-    //     fprintf(stderr, "1111111111111\n");
-    //     arg_types[i] = type_to_llvm(args[i]->computed_type);
-    //     arg_values[i] = codegen_accept(v, args[i]);
-    // }
-
-    // fprintf(stderr, "tremenda candela\n");
-
-    // if (!func)
-    // {
-    //     func = LLVMAddFunction(v->ctx->module, name, func_type);
-    // }
-
-    // fprintf(stderr, "tremenda candela\n");
-
-    // char *calltmp = compare_types(return_type, &TYPE_VOID) ? "" : "calltmp";
-
-    // fprintf(stderr, "tremenda candela121221\n");
-
-    // // Construir llamada
-    // if (func == NULL || func_type == NULL || v->ctx->builder == NULL || calltmp == NULL || arg_values == NULL || arg_count == 0)
-    // {
-    //     fprintf(stderr, "AQUI ESTA EL ERROR\n");
-    // }
-    // for (int i = 0; i < arg_count; i++)
-    // {
-    //     if (arg_values[i] == NULL)
-    //     {
-    //         fprintf(stderr, "arg_values[%d] es NULL\n", i);
-    //         exit(1);
-    //     }
-    // }
-    // fprintf(stderr, "()))()()\n");
-
-    // // LLVMValueRef call = LLVMBuildCall2(
-    // //     v->ctx->builder,
-    // //     func_type,
-    // //     func,
-    // //     arg_values,
-    // //     arg_count,
-    // //     calltmp);
-
-    // LLVMValueRef arg0 = arg_count > 0 ? arg_values[0] : NULL;
-    // // LLVMTypeRef dummy_func_type = LLVMFunctionType(
-    // //     type_to_llvm(return_type),
-    // //     arg_count > 0 ? (LLVMTypeRef[]){LLVMTypeOf(arg0)} : NULL,
-    // //     arg_count,
-    // //     0);
-    // LLVMTypeRef actual_func_type = LLVMGetElementType(LLVMTypeOf(func));
-
-    // LLVMValueRef call = LLVMBuildCall2(
-    //     v->ctx->builder,
-    //     func_type,
-    //     func,
-    //     arg_values,
-    //     arg_count,
-    //     calltmp);
-
-    // fprintf(stderr, "tremenda candela\n");
-
-    // free(arg_types);
-    // free(arg_values);
-    // return call;
+    free(arg_values);
+    return call;
 }
 
 LLVMValueRef get_or_create_function(LLVMModuleRef module, const char *name,
@@ -319,10 +248,21 @@ LLVMValueRef get_or_create_function(LLVMModuleRef module, const char *name,
     LLVMValueRef func = LLVMGetNamedFunction(module, name);
     if (!func)
     {
-        LLVMTypeRef func_type = LLVMFunctionType(return_type, param_types, param_count, 0);
+         LLVMTypeRef func_type = LLVMFunctionType(return_type, param_types, param_count, 0);
+
+        if (LLVMGetTypeKind(func_type) != LLVMFunctionTypeKind)
+        {
+            fprintf(stderr, "ERROR: func_type is not a function type, sino %d\n", LLVMGetTypeKind(func_type));
+            exit(1);
+        }
+        fprintf(stderr,"es una func_type \n");
+
         fprintf(stderr, "todo correcto\n");
         func = LLVMAddFunction(module, name, func_type);
     }
+
+    fprintf(stderr,"es una funcion type, tl vez no\n");
+
     return func;
 }
 

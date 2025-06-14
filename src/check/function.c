@@ -60,6 +60,7 @@ void check_call_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
 
     free_unified_index(unified);
 
+    fprintf(stderr, "SERA AQUIIII?\n");
     // crear un array de tpyes de los argumentos
     TypeValue **types = resolve_nodes_type(args, arg_count);
 
@@ -78,6 +79,7 @@ void check_call_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
             env_item->usages->data.func_node.args,
             env_item->usages->data.func_node.arg_count);
 
+            fprintf(stderr, "O SERA AQUIIII?\n");
         dec = malloc(sizeof(Function));
         dec->name = env_item->usages->data.func_node.name;
         dec->count_args = env_item->usages->data.func_node.arg_count;
@@ -97,9 +99,10 @@ void check_call_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
 
     }
 
-    
+        fprintf(stderr, "O SERA SERA AQUIIII?\n");
     FuncStructure *func_structure = type ? find_function_in_hierarchy(type, f, dec)
                                          : match_function_scope(node->scope, f, dec);
+    fprintf(stderr,"el valor de function es %d\n",func_structure->state->is_match);
 
     fprintf(stderr, ">>>>>>>>>>>>>>>>>>>>>\n");
     fprintf(stderr, "4-EL nodo %s y valor de retorno es %s\n", node->data.func_node.name, node->computed_type->name);
@@ -117,7 +120,7 @@ void check_call_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
     fprintf(stderr, "5-EL nodo %s y valor de retorno es %s\n", node->data.func_node.name, node->computed_type->name);
     fprintf(stderr, ">>>>>>>>>>>>>>>>>>>>>\n");
 
-
+    fprintf(stderr,"el valor de function es %d\n",func_structure->state->is_match);
 
     if (!func_structure->state->is_match)
     {
@@ -143,11 +146,13 @@ void check_call_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
         }
     }
 
+
+    fprintf(stderr,"JBEL\n");
     free(func_structure->state);
     free(types);
     free(f);
 
-    fprintf(stderr, "EL nodo %s y valor de retorno es %s\n", node->data.func_node.name, node->computed_type->name);
+
 }
 
 void visit_call_function(ASTVisitor *v, ASTNode *node)
@@ -158,7 +163,7 @@ void visit_call_function(ASTVisitor *v, ASTNode *node)
 void check_dec_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
 {
     // type is NULL
-    fprintf(stderr, "estoy en el visit de dec function\n");
+    fprintf(stderr, "ESTOY EN EL CHECK DEC FUNCTION function\n");
 
     if (node->checked)
     {
@@ -209,13 +214,16 @@ void check_dec_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
         // conectar scope
         propagate_env_scope(node, args[i]);
 
+        
         // buscar el tipo declarado (por nombre)
         Symbol *arg_type = find_type_scopes(node->scope, args[i]->static_type);
 
+       
         int flag = 0;
 
         // si no existe buscar en el contexto
-
+        
+    
         if (strcmp(args[i]->static_type, "") && !arg_type)
         {
             fprintf(stderr, "NO SE EJECUTA\n");
@@ -247,6 +255,7 @@ void check_dec_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
             }
         }
 
+        
         // si no tiene tipo usar TYPE_GENERIC
         if (!strcmp(args[i]->static_type, ""))
         {
@@ -257,8 +266,11 @@ void check_dec_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
         else if (arg_type)
         {
             args[i]->computed_type = arg_type->type;
+
+            
         }
 
+       // fprintf(stderr,"JULIOOOO CABELLO\n");
         // se agrega el arguemnto al contexto
         scope_add_symbol(node->scope, args[i]->data.var_name, args[i]->computed_type, NULL, 1);
 
@@ -274,7 +286,9 @@ void check_dec_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
     EnvItem *env_item = !type ? find_env_item(node->env, node->data.func_node.name, 0, 0)
                               : lookup_type_member_recursive(type->def_node->env,
                                                              node->data.func_node.name, type, 1);
-    if (env_item == NULL)
+    
+    
+                                                             if (env_item == NULL)
     {
         fprintf(stderr, "ACASO NO ENTIENDES\n");
     }
@@ -289,6 +303,7 @@ void check_dec_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
 
     fprintf(stderr, "JABEL RESENDIZ AGUIRRE\n");
     // fprintf(stderr,"el tipo inferred_type es %s y el tipo static_type_node es %s\n: ",inferred_type_body->name,static_type_node->name);
+    
 
     // si el tipo del cuerpo es GENERIC, pero existe un tipo definido y es posible unficar
     if (compare_types(inferred_type_body, &TYPE_GENERIC) &&
@@ -301,7 +316,6 @@ void check_dec_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
     }
 
     // si no hay tipo definido del nodo , pero hay uno en el entorno y hay conflicto con el inferido, ERROR
-
     if (!static_type_node)
     {
         if (env_item->computed_type)
@@ -360,6 +374,7 @@ void check_dec_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
         }
     }
 
+    
     // comprobacion de incompatiblidad entre tipos inferidos y el tipo definido
     if (static_type_node &&
         !ancestor_type(static_type_node->type, inferred_type_body) && !compare_types(inferred_type_body, &TYPE_ERROR))
@@ -391,6 +406,9 @@ void check_dec_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
     Function *func = find_function_by_name(node->scope, node->data.func_node.name);
     TypeValue **args_type = resolve_nodes_type(args, node->data.func_node.arg_count);
 
+
+   
+    
     if (!func)
     {
         for (int i = 0; i < node->data.func_node.arg_count; i++)
@@ -442,7 +460,8 @@ void check_dec_function(ASTVisitor *v, ASTNode *node, TypeValue *type)
     }
 
     fprintf(stderr, "asasdasd :%s y  %s\n", node->data.func_node.name, node->computed_type->name);
-    
+    //  fprintf(stderr,"222222222222222222222222222222222222222222el tipo de curent es %s\n y nombre de \n ",node->scope->functions->first->args_types[0]->name);
+
     fprintf(stderr, "EXITO AL DECLARAR UNA FUNCION\n");
 }
 
@@ -450,3 +469,4 @@ void visit_dec_function(ASTVisitor *v, ASTNode *node)
 {
     return check_dec_function(v, node, NULL);
 }
+

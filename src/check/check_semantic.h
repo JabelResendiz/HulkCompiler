@@ -7,6 +7,7 @@
 #include "../ast/ast.h"
 #include "../visitor/visitor.h"
 #include "../scope/scope.h"
+#include "../error/error.h"
 
 
 int make_checker(ASTNode *node);

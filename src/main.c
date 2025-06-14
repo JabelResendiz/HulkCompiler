@@ -13,7 +13,7 @@ extern ASTNode *root;
 
 int main()
 {
-    yyin = fopen("script/script.hulk", "r");
+    yyin = fopen("script/while.hulk", "r");
 
     if (!yyin)
     {
@@ -31,7 +31,7 @@ int main()
         {
             print_success("Syntax is correct");
             print_info("Generating LLVM code...");
-            //compile_to_llvm(root, "./build/output.ll");
+            compile_to_llvm(root, "./build/output.ll");
 
             print_success("LLVM code generated successfully in output.ll");
 

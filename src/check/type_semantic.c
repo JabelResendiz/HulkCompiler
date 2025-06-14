@@ -15,8 +15,7 @@ InheritanceChain *ich_list;
 
 void visit_type_dec(ASTVisitor *v, ASTNode *node)
 {
-
-    fprintf(stderr,"ABAJO COMUNISMO\n");
+    fprintf(stderr,"ESTOY EN LA DECLARACION DE UN TIPO\n");
 
     // Deteccion de Herencia Circular
     // Previene si el padre esta en la cadena de herencia
@@ -28,7 +27,7 @@ void visit_type_dec(ASTVisitor *v, ASTNode *node)
         return;
     }
 
-    fprintf(stderr,"ABAJO COMUNISMO\n");
+    
     if (node->checked)
     {
         // si ya se inspecciono el nodo
@@ -144,10 +143,6 @@ void visit_type_dec(ASTVisitor *v, ASTNode *node)
     Symbol *parent_info = find_type_scopes(node->scope, node->data.typeDef.name_parent);
     TypeValue *parent_type = &TYPE_OBJ;
     
-
-
-    
-   
 
     // si existe el nombre de padre y no se haya encontrado en el ambito actual
     if (strcmp(node->data.typeDef.name_parent, "") &&
@@ -268,10 +263,7 @@ void visit_type_dec(ASTVisitor *v, ASTNode *node)
     // marca el tipo del visitor a this
     v->current_type = this;
 
-    
-      
-    fprintf(stderr,"el numero de sintruccione es %d\n", node->data.typeDef.body_count);
-   
+
     // por cada insruccion(definicion) dentro
     for (int i = 0; i < node->data.typeDef.body_count; i++)
     {
@@ -282,8 +274,7 @@ void visit_type_dec(ASTVisitor *v, ASTNode *node)
 
         if (!register_type_member_in_env(node->env, child, this->name))
         {
-            fprintf(stderr,"ABAJO COMUNISMO\n");
-    
+            
             char *name = child->type == AST_DECL_FUNC ? child->data.func_node.name : child->data.binary_op.left->data.var_name;
 
             fprintf(stderr, "HAY UNERRROR\n");
@@ -291,7 +282,7 @@ void visit_type_dec(ASTVisitor *v, ASTNode *node)
         }
     }
 
-            
+  
      
     for(int i=0;i<node->data.typeDef.body_count;i++)
     {
@@ -304,14 +295,22 @@ void visit_type_dec(ASTVisitor *v, ASTNode *node)
 
 
     scope_add_symbol(node->scope, "self", this, NULL, 0);
+
+    
     for (int i = 0; i < node->data.typeDef.body_count; i++)
     {
         ASTNode *current = definitions[i];
         if (current->type == AST_DECL_FUNC)
         {
+             
             check_dec_function(v, current, this);
+
+            fprintf(stderr,"1111111111111111111111111111EL tipo de la primer funcion del scope es %s Y nombre %s\n", node->scope->functions->first->args_types[0]->name,node->scope->functions->first->name);
+
         }
     }
+
+           
 
 
     // obtener los tipos de los argumentos pasados  por argumento
@@ -354,11 +353,14 @@ void visit_type_dec(ASTVisitor *v, ASTNode *node)
     scope_add_type(node->scope->parent, this);
     ich_list = free_inheritance_chain(ich_list);
     v->current_type = visitor_type;
+
+     
+    
 }
 
 void visit_type_instance(ASTVisitor *v, ASTNode *node)
 {
-    fprintf(stderr, "Estamos en el type instance\n");
+    fprintf(stderr, "EstAMOS EN EL TYPE INSTANCE\n");
 
     ASTNode **args = node->data.typeDef.args;
 
@@ -382,15 +384,11 @@ void visit_type_instance(ASTVisitor *v, ASTNode *node)
     // la estrucuta que nos permite buscar todos los nodos que logran unificar
     UnifiedIndex *unified = try_unified_type(v, args, node->scope, node->data.typeDef.args_count,
                                              node->data.typeDef.name_type, env_item);
-        if(unified == NULL)
-        {
-            fprintf(stderr,"unfied es NULL\n");
-        }
+
     for(UnifiedIndex* curr = unified;curr != NULL;curr = curr->next)
     {
         accept(v,args[curr->value]);
     }
-       fprintf(stderr,"ABAJO BATISTA\n");
 
     free_unified_index(unified);
        
@@ -420,7 +418,6 @@ void visit_type_instance(ASTVisitor *v, ASTNode *node)
     
     FuncStructure* funcData = find_type_data(node->scope, function, dec);
 
-    fprintf(stderr,"ABAJO BATISTA\n");
 
     if (funcData->function && funcData->function->result_types) {
         node->computed_type= funcData->function->result_types;
@@ -454,6 +451,9 @@ void visit_type_instance(ASTVisitor *v, ASTNode *node)
 
 void visit_getter(ASTVisitor *v, ASTNode *node)
 {
+    fprintf(stderr,"ESTAMOS EN EL GETTER DE UNA FUNCION\n");
+    
+    
     // el objetio del cual se quiere acceder a un aributo o metodo
     ASTNode *instance = node->data.binary_op.left;
 
@@ -468,6 +468,8 @@ void visit_getter(ASTVisitor *v, ASTNode *node)
     accept(v, instance);
     TypeValue *instance_type = resolve_node_type(instance);
 
+    fprintf(stderr,"Candela reverenda\n");
+    
     // si no se puede determinar el tipo de la instancia
     if (compare_types(instance_type, &TYPE_ERROR))
     {
@@ -489,6 +491,8 @@ void visit_getter(ASTVisitor *v, ASTNode *node)
         exit(1);
     }
 
+
+    
     // si el miemebro es una variable
 
     else if (member->type == AST_VAR)
@@ -533,29 +537,46 @@ void visit_getter(ASTVisitor *v, ASTNode *node)
         }
     }
 
+
+    fprintf(stderr,"Candela reverenda\n");
+    
+
     // si es una llamada de funcion y no es un error
     if (member->type == AST_CALL_FUNC && !compare_types(instance_type, &TYPE_ERROR))
     {
         Symbol *new_symb = find_type_scopes(node->scope, instance_type->name);
 
         if (new_symb)
-        {
+        {   
+            //fprintf(stderr,"Candela reverenda\n");
+    
             instance_type = new_symb->type;
         }
         else
         {
+            fprintf(stderr,"Candela reverenda\n");
+    
             EnvItem *new_item = find_env_item(node->env, instance_type->name, 1, 0);
 
+            fprintf(stderr,"Candela12 reverenda\n");
+
+            fprintf(stderr,"opop\n");
             accept(v, new_item->usages);
+            fprintf(stderr,"Candela23 reverenda\n");
+    
 
             instance_type = new_item->computed_type;
         }
 
+        fprintf(stderr,"Candela reverenda\n");
+    
         member->data.func_node.name = generate_underscored_name(instance_type->name, member->data.func_node.name);
 
         check_call_function(v, member, instance_type);
     }
 
+    fprintf(stderr,"Candela reverenda\n");
+    
     node->computed_type = resolve_node_type(member);
     node->usages = add_usages(member, node->usages);
 }

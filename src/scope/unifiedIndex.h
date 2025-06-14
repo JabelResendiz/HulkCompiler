@@ -1,7 +1,7 @@
 
 
 #ifndef UNIFIEDINDEX_H
-#define UNIFIEDINDEX_h
+#define UNIFIEDINDEX_H
 
 #include "../visitor/visitor.h"
 

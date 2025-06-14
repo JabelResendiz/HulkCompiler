@@ -1,9 +1,14 @@
 
-type Point
-{
 
-   f(x: Number)=> 12;
-}
+function f(x:Number) => x*12+9;
+
+function g(x,y,z) => f(x+y)*f(z+10);
+
+print(let x= 12 , y= 23,z = x+y in g(x,y,z)+f(23));
 
 
-let q = new Point() in print(q.f(89));
+if(12 > 89) print(89) else print(78);
+
+// Este es un comentario
+// este es otro comentario
+

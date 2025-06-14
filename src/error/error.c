@@ -2,6 +2,9 @@
 // error.c
 
 #include "error.h"
+#include <stdio.h>
+#include <stdlib.h>
+
 
 ERROR *add_error_structure(ERROR *e, char *s)
 {
@@ -11,7 +14,7 @@ ERROR *add_error_structure(ERROR *e, char *s)
     error->index = e ? (e->index + 1) : 1;
     error->len_value = strlen(s);
 
-    return e;
+    return error;
 }
 
 ERROR *error_to_string(char **list, int len_list)
@@ -28,8 +31,7 @@ ERROR *error_to_string(char **list, int len_list)
 
 void print_error_structure(ERROR *e)
 {
-    // int count_errors= e ?  e->index : 0;
-
+    
     ERROR *errors = e;
 
     while (errors)
@@ -38,8 +40,7 @@ void print_error_structure(ERROR *e)
         errors = errors->next;
     }
 
-    
-    //return count_errors;
+
 }
 
 void add_error(char ***array, int *count, const char *str)
@@ -58,15 +59,6 @@ void message_semantic_error(ASTVisitor *v, const char *fmt, ...)
     add_error(&(v->errors), &(v->error_count), str);
 }
 
-// void free_semantic_error(char **array, int count)
-// {
-//     for (int i = 0; i < count; i++)
-//     {
-//         free(array[i]);
-//     }
-
-//     free(array);
-// }
 
 void free_semantic_error(ERROR *e)
 {

@@ -56,7 +56,7 @@ struct ASTVisitor {
     // Contexto
     char* current_function;
     TypeValue* current_type;
-
+    int id;
     // Visitadores
     BasicVisitors basic;
     ExpressionVisitors expr;

@@ -15,7 +15,6 @@ Env *create_env(Env *parent)
     return env;
 }
 
-
 void free_env(Env *env)
 {
     if (env)
@@ -33,7 +32,6 @@ void free_env(Env *env)
     }
 }
 
-
 // guarda un item dentro de un entorno asociado a un tipo (save_context_fr_tyep)
 int register_type_member_in_env(Env *env, struct ASTNode *node, char *type_name)
 {
@@ -47,17 +45,19 @@ int register_type_member_in_env(Env *env, struct ASTNode *node, char *type_name)
     int is_function = node->type == AST_DECL_FUNC;
 
     // Extract original member name
-    char *member_name = is_function ? node->data.func_node.name : node->data.binary_op.left->data.var_name;
+    char *member_name = is_function ? node->static_type : node->data.binary_op.left->static_type;
 
-    // Build qualified name: _<type_name>_<member_name>
-    char *qualified_name = generate_underscored_name(type_name, member_name);
+    char *name = is_function ? node->data.func_node.name : node->data.binary_op.left->data.var_name;
+
+    // Build qualified name: _<type_name>_<name>
+    char *qualified_name = generate_underscored_name(type_name, name);
 
     // Check if an item with this name and kind already exists
     EnvItem *existing = find_env_item_by_kind(env, qualified_name, is_function);
     if (existing)
     {
         existing->computed_type = is_function ? &TYPE_GENERIC : &TYPE_VOID;
-        free(qualified_name); // avoid memory leak
+        //free(qualified_name); // avoid memory leak
         return 0;
     }
 
@@ -67,16 +67,17 @@ int register_type_member_in_env(Env *env, struct ASTNode *node, char *type_name)
 
     // Rename the node in AST to the qualified name
     if (is_function)
-        node->data.func_node.name = qualified_name;
+        new_item->usages->data.func_node.name = qualified_name;
     else
-        node->data.binary_op.left->data.var_name = qualified_name;
+        new_item->usages->data.binary_op.left->data.var_name = qualified_name;
 
     // Try to determine its declared type
-    Symbol *known_type = find_type_scopes(node->scope, node->static_type);
+    Symbol *known_type = find_type_scopes(node->scope, member_name);
+
     if (known_type)
         new_item->computed_type = known_type->type;
-    else
-        new_item->computed_type = NULL;
+    // else
+    //     new_item->computed_type = NULL;
 
     // Insert at the head of the environment
     new_item->next = env->start;
@@ -85,8 +86,6 @@ int register_type_member_in_env(Env *env, struct ASTNode *node, char *type_name)
 
     return 1;
 }
-
-
 
 /// @brief Toma dos cadena A y B retorna una nuvea cadena en el formato _A_B
 /// @param prefix
@@ -114,7 +113,6 @@ char *generate_underscored_name(const char *prefix, const char *base)
     snprintf(result, total_length, "_%s_%s", prefix, base);
     return result;
 }
-
 
 /// @brief Busca un EnvItem* dentro de un ENv que contenga un node (usage) con cierto nombre y luego como se puede mejorar y renombrar
 /// @param env
@@ -149,10 +147,6 @@ EnvItem *find_env_item_by_kind(Env *env, const char *name, int is_function)
 
     return NULL;
 }
-
-
-
-
 
 /// @brief Implementa una busqueda recursiva jerarquica de un miembro dentro de un entorno asociado a un tipo
 /// @param context El entorno actual
@@ -218,68 +212,40 @@ char *remove_type_prefix(const char *full_name, const char *type_name)
 /// @return Devuelve un ptro EnvItem* si encuentra o NULL
 EnvItem *find_env_item(Env *env, char *name, int is_type, int var)
 {
-    fprintf(stderr,"Voy a buscar %s que es tipo: %d y es un var %d\n", name,is_type,var);
+    fprintf(stderr, "Voy a buscar %s que es tipo: %d y es un var %d\n", name, is_type, var);
 
     if (!env)
     {
-        fprintf(stderr,"CUBAAAA\n");
+        fprintf(stderr, "CUBAAAA\n");
         return NULL;
     }
-        
 
-    // for (Env *env_curr = env; env_curr; env_curr = env_curr->parent)
-    // {
-    //     for (EnvItem *curr = env->start; curr; curr = curr->next)
-    //     {
-    //         if (
-    //             // buscar una funcion
-    //             (!is_type && !var && curr->usages->type == AST_DECL_FUNC &&
-    //              !strcmp(curr->usages->data.func_node.name, name)) ||
-
-    //             // buscar un tipo
-    //             (is_type && !var && curr->usages->type == AST_TYPE &&
-    //              !strcmp(curr->usages->data.typeDef.name_type, name)) ||
-
-    //             // buscar una variabel
-    //             (var && curr->usages->type == AST_ASSIGNMENT &&
-    //              !strcmp(curr->usages->data.binary_op.left->data.var_name, name)))
-    //         {
-    //             fprintf(stderr,"La encontre por dios\n");
-    //             return curr;
-    //         }
-    //     }
-    // }
-
-    // fprintf(stderr,"No esta en el entorno\n");
-    // return NULL;
-
-
-    EnvItem* current = env->start;
+    EnvItem *current = env->start;
     int i = 0;
-    while (i < env->env_count) {
+    while (i < env->env_count)
+    {
         if ((!is_type && !var && current->usages->type == AST_DECL_FUNC &&
-            !strcmp(current->usages->data.func_node.name, name)) ||
+             !strcmp(current->usages->data.func_node.name, name)) ||
             (is_type && !var && current->usages->type == AST_TYPE &&
-            !strcmp(current->usages->data.typeDef.name_type, name)) ||
+             !strcmp(current->usages->data.typeDef.name_type, name)) ||
             (var && current->usages->type == AST_ASSIGNMENT &&
-            !strcmp(current->usages->data.binary_op.left->data.var_name, name))
-        ) {
-            fprintf(stderr,"CUBAAAA\n");
+             !strcmp(current->usages->data.binary_op.left->data.var_name, name)))
+        {
+            fprintf(stderr, "CUBAAAA\n");
             return current;
         }
         current = current->next;
         i++;
     }
-    
-    if (env->parent) {
+
+    if (env->parent)
+    {
         return find_env_item(env->parent, name, is_type, var);
     }
-    
-    fprintf(stderr,"No esta en el entorno\n");
+
+    fprintf(stderr, "No esta en el entorno\n");
     return NULL;
 }
-
-
 
 /// @brief Crear un environment item nuevo con al func o el tipo
 /// @param env
@@ -300,13 +266,19 @@ int create_env_item(Env *env, ASTNode *node, char *name, int is_type_decl)
     EnvItem *env_item = malloc(sizeof(EnvItem));
     env_item->usages = node;
 
-    // busca el tipo declarado por el usuario del nodo en el scope
-    Symbol *defined_type = find_type_scopes(node->scope, node->static_type);
+    // // busca el tipo declarado por el usuario del nodo en el scope
+    // Symbol *defined_type = find_type_scopes(node->scope, node->static_type);
 
     // Si ya exsite ese tipo
-    if (defined_type)
+
+    if (!is_type_decl)
     {
-        env_item->computed_type = defined_type->type;
+        Symbol* defined_type = find_type_scopes(node->scope,node->static_type);
+
+        if (defined_type)
+        {
+            env_item->computed_type = defined_type->type;
+        }
     }
 
     env_item->next = env->start;

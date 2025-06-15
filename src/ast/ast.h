@@ -98,6 +98,9 @@ typedef struct ASTNode
             int p_args_count;
             ASTNode** body_elements;
             int body_count;
+            ASTNode* parent_instance;
+            int id;
+            int p_constructor;
         }typeDef;
 
 
@@ -162,7 +165,8 @@ ASTNode* create_type_node(char * name_type,
                           ASTNode** p_args,
                           int p_args_count,
                           ASTNode** body,
-                          int body_count);
+                          int body_count,
+                          int p_constructor);
 
 // crear una instancia de un type
 ASTNode* create_struct_instance_node(char* name_type,

@@ -9,14 +9,14 @@ typedef struct EnvItem
 {
     struct ASTNode *usages;
     TypeValue *computed_type;
-    EnvItem *next;
+    struct EnvItem *next;
 } EnvItem;
 
 typedef struct Env
 {
     int env_count;
     EnvItem * start;
-    Env *parent;
+    struct Env *parent;
 } Env;
 
 

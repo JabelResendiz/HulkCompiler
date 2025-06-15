@@ -19,6 +19,7 @@ typedef struct Symbol
 {
     char *name;
     int param;
+    int is_type_param;
     TypeValue* type;
     Symbol *next;
     Usage* usage;

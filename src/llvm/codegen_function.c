@@ -177,6 +177,7 @@ LLVMValueRef codegen_log(LLVMVisitor *v, ASTNode *node)
 
 LLVMValueRef codegen_custom_func(LLVMVisitor *v, ASTNode *node)
 {
+    fprintf(stderr,"estamos en el codegen call function\n");
 
     const char *name = node->data.func_node.name;
     int arg_count = node->data.func_node.arg_count;
@@ -211,12 +212,12 @@ LLVMValueRef codegen_custom_func(LLVMVisitor *v, ASTNode *node)
     LLVMTypeRef *param_types = malloc(arg_count * sizeof(LLVMTypeRef));
     for (int i = 0; i < arg_count; i++)
     {
-        param_types[i] = type_to_llvm(args[i]->computed_type);
+        param_types[i] = type_to_llvm(v,args[i]->computed_type);
     }
 
     fprintf(stderr, "4-ADNDA MIERDAAA\n");
 
-    LLVMTypeRef return_llvm_type = type_to_llvm(return_type);
+    LLVMTypeRef return_llvm_type = type_to_llvm(v,return_type);
     
     LLVMTypeRef func_type = LLVMFunctionType(return_llvm_type, param_types, arg_count, 0);
 
@@ -285,14 +286,10 @@ LLVMValueRef codegen_dec_function(LLVMVisitor *v, ASTNode *node)
     LLVMTypeRef *param_types = malloc(param_count * sizeof(LLVMTypeRef));
     for (int i = 0; i < param_count; i++)
     {
-        param_types[i] = type_to_llvm(params[i]->computed_type);
+        param_types[i] = type_to_llvm(v,params[i]->computed_type);
     }
 
-    // LLVMValueRef func = LLVMGetNamedFunction(module, name);
-    // LLVMBasicBlockRef entry = LLVMAppendBasicBlock(func, "entry");
-    // LLVMBasicBlockRef exit_block = LLVMAppendBasicBlock(func, "function_exit");
-    // Obtén o crea la función correctamente
-    LLVMTypeRef ret_llvm_type = type_to_llvm(return_type);
+    LLVMTypeRef ret_llvm_type = type_to_llvm(v,return_type);
 
     fprintf(stderr, "el tipo de retorno es %s\n", return_type->name);
 

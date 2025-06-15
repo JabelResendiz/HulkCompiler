@@ -178,9 +178,14 @@ TypeValue *create_type(char *name, TypeValue *type, TypeValue **param_types, int
 // sino se mantiene el que tiene por defecto
 TypeValue *resolve_node_type(ASTNode *node)
 {
-    TypeValue *type = node->computed_type;
 
+    fprintf(stderr,"ENTRE AL RESOLVE NODE TYPE\n");
+
+    TypeValue *type = node->computed_type;
+    fprintf(stderr,"PERO BUENO\n");
+    
     // cunado permita la creacion de tipos nuevos
+    
     Symbol *symbol = find_type_scopes(node->scope, type->name);
 
     if (symbol)

@@ -41,4 +41,7 @@ int try_unify_operand(ASTVisitor *v,
 int try_unify_conditional(ASTVisitor *v,
                           ASTNode *node,
                           TypeValue *type);
+
+int try_unify_attr(ASTVisitor* v,ASTNode* node);
+
 #endif

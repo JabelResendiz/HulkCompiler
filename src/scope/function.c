@@ -74,7 +74,7 @@ void free_func_table(FuncTable *table)
 FunctionComparisonState *func_equals(Function *f1, Function *f2)
 {
     fprintf(stderr, "los nombre son %s y %s\n", f1->name, f2->name);
-    fprintf(stderr,"los tipos del arguemtno de %s es \n\n\n",f2->args_types[0]->name);
+    //fprintf(stderr,"los tipos del arguemtno de %s es \n\n\n",f2->args_types[0]->name);
     
     if (strcmp(f1->name, f2->name))
     {
@@ -269,12 +269,16 @@ FuncStructure *find_type_data(Scope *scope, Function *f, Function *dec)
         return NULL;
     }
 
+    fprintf(stderr,"ESTOY EN TYPE DATA Y LOS NOMBRES DE LAS FUNCIONES SON : %s y %s\n", f->name,dec->name);
+    
     FuncStructure *result = malloc(sizeof(FuncStructure));
     int not_found = 1;
 
     if (scope->types)
     {
         Symbol *current_sym = scope->types;
+
+        
         int i = 0;
         while (i < scope->t_count)
         {
@@ -286,6 +290,8 @@ FuncStructure *find_type_data(Scope *scope, Function *f, Function *dec)
             FunctionComparisonState *tuple = func_equals(current, f);
             if (tuple->is_match)
             {
+                fprintf(stderr,"el nombre de curr_sym es %s\n",current_sym->name);
+
                 result->state = tuple;
                 result->function = current;
                 return result;

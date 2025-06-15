@@ -226,7 +226,7 @@ void free_scope(Scope *scope)
 /// @return El symbol que coincide con el nombre en el Scope (recursivo)
 Symbol *find_type_scopes(Scope *scope, const char *type_name)
 {
-    
+    fprintf(stderr,"ESTOY EN EL FIND_TYPE_SCOPES con %s\n",type_name);
     // si alguno es nulo, retorna NULL
 
     if (!scope || !type_name)
@@ -265,19 +265,34 @@ Symbol *find_type_scopes(Scope *scope, const char *type_name)
 /// @return El Symbol encontrado o NULL (eoc)
 Symbol *lookup_parameter(Scope *scope, const char *name)
 {
+    fprintf(stderr,"estoy en lookup parameter , la variable que busco se llama %s\n",name);
 
-    for (Scope *s = scope; s; s = s->parent)
-    {
-
-        for (Symbol *current = s->symbols; current; current = current->next)
-        {
-            if (current->param && !strcmp(current->name, name))
-            {
-                return current;
-            }
-        }
+         fprintf(stderr,"12-hay %d simbolos\n",scope->s_count);
+    if (!scope) {
+        return NULL;
     }
 
+    Symbol* current = scope->symbols;
+    int i = 0;
+    fprintf(stderr,"%d\n",scope->s_count);
+    while (i < scope->s_count) {
+        fprintf(stderr,"La current name es %s\n",current->name);
+        fprintf(stderr,"el valor es %d\n", current->param);
+
+        if (current->param && !strcmp(current->name, name)) {
+            return current;
+        }
+        current = current->next;
+        i++;
+    }
+
+    if (current)
+        return current;
+    
+    if (scope->parent) {
+        return lookup_parameter(scope->parent, name);
+    }
+    
     return NULL;
 }
 

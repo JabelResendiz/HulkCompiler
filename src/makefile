@@ -43,6 +43,7 @@ SRC_DIR = .
 AST_DIR = ast
 CHECK_DIR = check
 LLVM_DIR = llvm
+LLVM_TYPE_DIR = llvm/type
 LEXER_DIR = lexer
 PARSER_DIR = parser
 LLVM_SCOPE_DIR = llvm_scope
@@ -69,10 +70,10 @@ $(EXEC): lex.yy.o y.tab.o $(AST_DIR)/ast.o $(AST_DIR)/keyword.o \
 	$(AST_DIR)/basic.o $(AST_DIR)/cond_while.o $(AST_DIR)/function.o $(AST_DIR)/op.o $(AST_DIR)/oop.o  \
 	$(TYPE_DIR)/type.o $(TYPE_DIR)/operators.o \
 	$(SRC_DIR)/main.o \
-    $(LLVM_DIR)/init_codegen.o $(LLVM_DIR)/visitor_llvm.o \
+    $(LLVM_DIR)/init_codegen.o $(LLVM_DIR)/visitor_llvm.o  $(LLVM_DIR)/typeId.o\
 	$(LLVM_DIR)/codegen.o $(LLVM_DIR)/codegen_basic.o $(LLVM_DIR)/codegen_function.o\
-	$(LLVM_DIR)/codegen_control.o $(LLVM_DIR)/codegen_op.o \
-	$(LLVM_SCOPE_DIR)/llvm_scope.o \
+	$(LLVM_DIR)/codegen_control.o $(LLVM_DIR)/codegen_op.o $(LLVM_TYPE_DIR)/declaration.o\
+	$(LLVM_TYPE_DIR)/instance.o $(LLVM_TYPE_DIR)/getter.o $(LLVM_TYPE_DIR)/setter.o  $(LLVM_SCOPE_DIR)/llvm_scope.o \
     $(CHECK_DIR)/typecheck.o  $(CHECK_DIR)/variable_semantic.o $(CHECK_DIR)/function.o $(CHECK_DIR)/cond_while.o\
 	$(CHECK_DIR)/check_semantic.o $(CHECK_DIR)/type_semantic.o \
 	$(SCOPE_DIR)/scope.o $(SCOPE_DIR)/inheritance.o \
@@ -115,13 +116,25 @@ $(LLVM_DIR)codegen_control/.o: $(LLVM_DIR)/codegen_control.c
 $(LLVM_DIR)codegen_function/.o: $(LLVM_DIR)/codegen_function.c
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-# $(LLVM_DIR)codegen_oop/.o: $(LLVM_DIR)/codegen_oop.c
-# 	@$(CC) $(CFLAGS) -c $< -o $@
+$(LLVM_TYPE_DIR)declaration/.o: $(LLVM_TYPE_DIR)/declaration.c
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+$(LLVM_TYPE_DIR)instance/.o: $(LLVM_TYPE_DIR)/instance.c $(LLVM_TYPE_DIR)/common.h
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+$(LLVM_TYPE_DIR)getter/.o: $(LLVM_TYPE_DIR)/getter.c
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+$(LLVM_TYPE_DIR)setter/.o: $(LLVM_TYPE_DIR)/setter.c
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+
 
 $(LLVM_DIR)codegen_op/.o: $(LLVM_DIR)/codegen_op.c
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-
+$(LLVM_SCOPE)/tpyeId.o: $(LLVM_SCOPE)/tpyeId.c $(LLVM_SCOPE)/typeId.h
+	@$(CC) $(CFLAGS) -c $< -o $@
 
 # AST
 $(AST_DIR)/ast.o: $(AST_DIR)/ast.c $(AST_DIR)/ast.h

@@ -54,7 +54,23 @@ LLVMValueRef codegen_accept(LLVMVisitor *visitor, ASTNode *node)
 
     case AST_DECL_FUNC:
         return visitor->control.dec_function(visitor, node);
-
+    
+    case AST_TYPE:
+        return visitor->types.type_dec(visitor,node);
+    
+    case AST_INSTANCE:
+        return visitor->types.type_instance(visitor,node);
+    
+    case AST_GETTER:
+        if(node->data.binary_op.right->type == AST_CALL_FUNC)
+        {
+            return visitor->attrs.method_getter(visitor,node);
+        }
+        return visitor->attrs.attr_getter(visitor,node);
+    
+    case AST_SETTER:
+        return visitor->attrs.attr_setter(visitor,node);
+    
     default:
         exit(1);
     }

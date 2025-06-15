@@ -13,7 +13,7 @@ extern ASTNode *root;
 
 int main()
 {
-    yyin = fopen("script/while.hulk", "r");
+    yyin = fopen("script/script.hulk", "r");
 
     if (!yyin)
     {
@@ -35,8 +35,6 @@ int main()
 
             print_success("LLVM code generated successfully in output.ll");
 
-            // free_ast(root);
-            // root = NULL;
         }
 
         else

@@ -11,11 +11,13 @@ ASTNode *create_type_node(char *name_type,
                           ASTNode **p_args,
                           int p_args_count,
                           ASTNode **body,
-                          int body_count)
+                          int body_count,
+                          int p_constructor)
 {
     ASTNode *node = malloc(sizeof(ASTNode));
     node->line = line_num;
     node->type = AST_TYPE;
+    node->checked = 0;
     node->computed_type = &TYPE_VOID;
     node->scope = create_scope(NULL);
     node->env = create_env(NULL);
@@ -43,6 +45,12 @@ ASTNode *create_type_node(char *name_type,
         node->data.typeDef.body_elements[i] = body[i];
     }
 
+    node->data.typeDef.parent_instance = NULL;
+    node->data.typeDef.id =0;
+    node->data.typeDef.p_constructor = p_constructor;
+    node->usages = NULL;
+
+    
     return node;
 }
 
@@ -79,7 +87,8 @@ ASTNode *create_struct_instance_node(char *name_type,
     {
         node->data.typeDef.args[i] = args[i];
     }
-
+    node->data.typeDef.parent_instance = NULL;
+    node->usages = NULL;
     return node;
 }
 
@@ -97,6 +106,6 @@ ASTNode *create_property_assignment_node(ASTNode *instance,
     node->env = create_env(NULL);
     node->data.setter.instance = instance;
     node->data.setter.property = property;
-    node->data.setter.property = value;
+    node->data.setter.value = value;
     return node;
 }

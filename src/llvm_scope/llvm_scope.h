@@ -4,7 +4,7 @@
 #define LLVM_SCOPE_H
 
 #include <llvm-c/Core.h>
-
+#include "../type_value/type.h"
 
 /// @brief estructura para almacenear variables en un ambito
 typedef struct ScopeVarEntry {
@@ -19,6 +19,8 @@ typedef struct LLVMScope {
     ScopeVarEntry* entries;  // Lista de variables en este ámbito.
     struct LLVMScope* parent; // Puntero al ámbito padre (para anidamiento, como en funciones/bloques).
 } LLVMScope;
+
+
 
 
 void print_scope();

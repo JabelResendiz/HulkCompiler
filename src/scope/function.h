@@ -45,6 +45,7 @@ typedef struct FuncStructure
 
 Function* find_function_by_name(Scope* scope,char* name);
 
+
 void free_func_table(FuncTable* table);
 
 FuncStructure* match_function_scope(Scope *scope,Function* f,Function* second);

@@ -10,6 +10,7 @@
 #include "../llvm_scope/llvm_scope.h"
 #include <stdlib.h>
 
+
 typedef LLVMValueRef (*BuiltinFuncHandler)(LLVMVisitor *, ASTNode *);
 typedef struct
 {
@@ -18,8 +19,10 @@ typedef struct
     const char *llvm_name;
 } BuiltinFunction;
 
+
+
 // Funcion para obtnener el tipo LLVM correspondiente a un tipo de lenguaje
-LLVMTypeRef type_to_llvm(TypeValue *type);
+LLVMTypeRef type_to_llvm(LLVMVisitor*v,TypeValue *type);
 
 // Generar la funcion main en LLVM IR
 void compile_to_llvm(ASTNode *node, const char *filename);
@@ -53,7 +56,16 @@ LLVMValueRef codegen_math_function(LLVMVisitor *v, ASTNode *node, const char *na
 LLVMValueRef codegen_rand(LLVMVisitor *v, ASTNode *node);
 LLVMValueRef codegen_log(LLVMVisitor *v, ASTNode *node);
 LLVMValueRef codegen_custom_func(LLVMVisitor *v, ASTNode *node);
-
 LLVMValueRef handle_object_operation(LLVMVisitor *v, LLVMValueRef left, LLVMValueRef right, int op);
+
+
+// DE TIPOS
+LLVMValueRef codegen_type_dec(LLVMVisitor* v,ASTNode*node);
+void generate_type_methods(LLVMVisitor *v, const char *type_name, LLVMTypeRef struct_type, ASTNode *type_node);
+
+LLVMValueRef codegen_type_instance(LLVMVisitor* v, ASTNode* node);
+LLVMValueRef codegen_attr_setter(LLVMVisitor*v , ASTNode* node);
+LLVMValueRef codegen_attr_getter(LLVMVisitor* v,ASTNode* node);
+LLVMValueRef codegen_method_getter(LLVMVisitor* v, ASTNode* node);
 
 #endif

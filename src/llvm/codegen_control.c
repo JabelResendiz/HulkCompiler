@@ -77,7 +77,7 @@ LLVMValueRef codegen_conditional(LLVMVisitor *v, ASTNode *node)
 
     // Creacion de nodo PHI (para valores no void)
 
-    LLVMTypeRef phi_type = type_to_llvm(node->computed_type);
+    LLVMTypeRef phi_type = type_to_llvm(v,node->computed_type);
     LLVMValueRef phi = LLVMBuildPhi(v->ctx->builder, phi_type, "if_result");
 
     // Conexion de valores al PHI
@@ -106,7 +106,7 @@ LLVMValueRef codegen_while(LLVMVisitor *v, ASTNode *node)
     LLVMValueRef current_function = LLVMGetBasicBlockParent(LLVMGetInsertBlock(builder));
 
     // Determinar el tipo del cuerpo del ciclo
-    LLVMTypeRef body_type = type_to_llvm(node->data.binary_op.right->computed_type);
+    LLVMTypeRef body_type = type_to_llvm(v,node->data.binary_op.right->computed_type);
 
     // Solo si el cuerpo no es void, reservar una variable temporal para almacenar el valor
     LLVMValueRef result_addr = NULL;

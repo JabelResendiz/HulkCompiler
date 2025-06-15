@@ -35,18 +35,19 @@ typedef struct {
     LLVMValueRef (*while_loop)(LLVMVisitor*, ASTNode*);
 } LLVM_ControlVisitors;
 
-// typedef struct {
-//     LLVMValueRef (*type_dec)(Visitor*, ASTNode*);
-//     LLVMValueRef (*type_instance)(Visitor*, ASTNode*);
-//     LLVMValueRef (*casting)(Visitor*, ASTNode*);
-//     LLVMValueRef (*test_type)(Visitor*, ASTNode*);
-// } TypeVisitors;
+typedef struct {
+    LLVMValueRef (*type_dec)(LLVMVisitor*, ASTNode*);
+    LLVMValueRef (*type_instance)(LLVMVisitor*, ASTNode*);
+    // LLVMValueRef (*casting)(Visitor*, ASTNode*);
+    // LLVMValueRef (*test_type)(Visitor*, ASTNode*);
+} LLVM_TypeVisitors;
 
-// typedef struct {
-//     LLVMValueRef (*attr_getter)(Visitor*, ASTNode*);
-//     LLVMValueRef (*attr_setter)(Visitor*, ASTNode*);
-//     LLVMValueRef (*base_func)(Visitor*, ASTNode*);
-// } AttributeVisitors;
+typedef struct {
+    LLVMValueRef (*attr_getter)(LLVMVisitor*, ASTNode*);
+    LLVMValueRef (*attr_setter)(LLVMVisitor*, ASTNode*);
+    LLVMValueRef (*method_getter)(LLVMVisitor*,ASTNode*);
+   // LLVMValueRef (*base_func)(Visitor*, ASTNode*);
+} LLVM_AttributeVisitors;
 
 // --- Estructura del visitor ---
 typedef struct LLVMVisitor {
@@ -57,8 +58,9 @@ typedef struct LLVMVisitor {
     LLVM_BasicVisitors basic;
     LLVM_ExpressionVisitors expr;
     LLVM_ControlVisitors control;
-    // TypeVisitors types;
-    // AttributeVisitors attrs;
+    LLVM_TypeVisitors types;
+    LLVM_AttributeVisitors attrs;
+
 }LLVMVisitor;
 
 // --- Funciones de utilidades ---

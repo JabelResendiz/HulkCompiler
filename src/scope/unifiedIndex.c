@@ -9,10 +9,10 @@
 
 void free_unified_index(UnifiedIndex *u)
 {
-    if(!u) return ;
+    if (!u)
+        return;
     free_unified_index(u->next);
     free(u);
-    
 }
 
 /// @brief intenta unifcar un operando con un cierto tipo
@@ -303,9 +303,8 @@ UnifiedIndex *try_unified_type(ASTVisitor *v,
                 }
                 else
                 {
-                     return NULL;
+                    return NULL;
                 }
-                   
             }
         }
     }
@@ -403,9 +402,64 @@ UnifiedIndex *try_unified_func(ASTVisitor *v,
 
 UnifiedIndex *add_unified_index(UnifiedIndex *list, int index)
 {
-    UnifiedIndex *e =(UnifiedIndex*) malloc(sizeof(UnifiedIndex));
+    UnifiedIndex *e = (UnifiedIndex *)malloc(sizeof(UnifiedIndex));
     e->value = index;
     e->next = list;
 
     return e;
+}
+
+int try_unify_attr(ASTVisitor *v, ASTNode *node)
+{
+    ASTNode *instance = node->data.binary_op.left;
+    ASTNode *member = node->data.binary_op.right;
+
+    int unified = 0;
+
+    if (member->type == AST_VAR)
+        return 1;
+
+    Usage *types = find_type_by_method(node->env, member->data.func_node.name);
+
+    TypeValue *type = NULL;
+    Symbol *struct_type = NULL;
+
+    foreach_valueList(der, types)
+    {
+        ASTNode * dec = der->node;
+
+        accept(v,dec);
+
+        struct_type = find_type_scopes(node->scope,dec->data.typeDef.name_type);
+
+        if(struct_type)
+        {
+            if(!type)
+            {
+                type = struct_type->type;
+            }
+
+            else{
+                TypeValue* tmp = compute_lca(type,struct_type->type);
+
+                if(type_contains_method_in_scope(tmp,member->data.func_node.name,1))
+                {
+                    type = tmp;
+                }
+                else return 0;
+            }
+        }
+    }
+
+    if(type)
+    {
+        unified = try_unify_operand(v,instance,type);
+
+        if(unified)
+        {
+            instance->computed_type = type;
+        }
+    }
+
+    return unified;
 }

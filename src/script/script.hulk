@@ -1,14 +1,10 @@
 
 
-function f(x:Number) => x*12+9;
+type A (x:Number,y:Number)
+{
+    x= x;
+    y=y;
 
-function g(x,y,z) => f(x+y)*f(z+10);
-
-print(let x= 12 , y= 23,z = x+y in g(x,y,z)+f(23));
-
-
-if(12 > 89) print(89) else print(78);
-
-// Este es un comentario
-// este es otro comentario
+    getX() => self.x;
+}
 

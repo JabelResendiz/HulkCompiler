@@ -332,13 +332,15 @@ LLVMValueRef codegen_let_in(LLVMVisitor *v, ASTNode *node)
         const char *var_name = decl->data.binary_op.left->data.var_name;
         LLVMValueRef value = codegen_accept(v, decl->data.binary_op.right);
         if (!value) return NULL;
-
+        
         // Crear alloca para la variable
-        LLVMTypeRef var_type = type_to_llvm(decl->data.binary_op.right->computed_type);
+        LLVMTypeRef var_type = type_to_llvm(v,decl->data.binary_op.right->computed_type);
         LLVMValueRef alloca = LLVMBuildAlloca(builder, var_type, var_name);
         LLVMBuildStore(builder, value, alloca);
         declare_variable(var_name, alloca);
     }
+
+    
 
     // Obtener el bloque actual antes de evaluar el cuerpo
     LLVMBasicBlockRef current_block = LLVMGetInsertBlock(builder);

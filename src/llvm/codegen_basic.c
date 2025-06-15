@@ -82,27 +82,39 @@ LLVMValueRef codegen_boolean(LLVMVisitor *v, ASTNode *node)
 //     return c;
 // }
 
+
+
 LLVMValueRef codegen_variable(LLVMVisitor *v, ASTNode *node)
 {
 
-    fprintf(stderr,"estoy en el codegen de varaible\n");
+    fprintf(stderr, "estoy en el codegen de varaible\n");
 
     LLVMModuleRef module = v->ctx->module;
     LLVMBuilderRef builder = v->ctx->builder;
 
     LLVMValueRef alloca = lookup_variable(node->data.var_name);
 
-    if (!alloca) {
+    if (!alloca)
+    {
         fprintf(stderr, "Error: Variable '%s' no declarada\n", node->data.var_name);
         return NULL;
     }
 
+    // LLVMTypeRef var_ptr_type = LLVMTypeOf(alloca);           // alloca es un puntero
+    // fprintf(stderr,"UN tremendo problema aqui\n");
+    // LLVMTypeRef var_type = LLVMGetElementType(var_ptr_type); // tipo apuntado
+    //     fprintf(stderr,"UN tremendo problema aqui\n");
+    // LLVMValueRef loaded = LLVMBuildLoad2(builder, var_type, alloca, "tmp");
+    // fprintf(stderr,"UN tremendo problema aqui\n");
+    
+    LLVMTypeRef var_type = type_to_llvm(v,node->computed_type);
+    
+    LLVMValueRef loaded = LLVMBuildLoad2(builder, var_type, alloca, "tmp");
 
-    LLVMValueRef loaded = LLVMBuildLoad2(builder, LLVMDoubleType(), alloca, "tmp");
-
+    fprintf(stderr,"Hasta aqui todo joya\n");
     if (node->computed_type && node->computed_type != NULL)
     {
-        fprintf(stderr,"candela\n");
+        fprintf(stderr, "candela\n");
 
         return loaded;
     }
@@ -193,10 +205,9 @@ LLVMValueRef codegen_assignments(LLVMVisitor *v, ASTNode *node)
     LLVMValueRef existing_alloca = lookup_variable(var_name);
     LLVMValueRef alloca;
 
-   
     if (existing_alloca)
     {
-        fprintf(stderr,"no hay error se ecnotro la variable\n");
+        fprintf(stderr, "no hay error se ecnotro la variable\n");
 
         // Para asignación destructiva (:=), actualizar en todos los scopes
         if (node->type == AST_DESTRUCTOR)

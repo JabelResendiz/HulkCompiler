@@ -10,7 +10,11 @@
 
 void visit_program(ASTVisitor *v, ASTNode *node)
 {
+    
+       // fprintf(stderr,"ESTOY EN LE VISIT DE PROGRAM \n");
     init(node->scope);
+    
+       // fprintf(stderr,"ESTOY EN LE VISIT DE PROGRAM \n");
     initialize_program_environment(v, node); // Regsitra funciones/tipos en el contexto global
 
     for (int i = 0; i < node->data.program.count; i++)

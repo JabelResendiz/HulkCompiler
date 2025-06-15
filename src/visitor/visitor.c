@@ -5,11 +5,14 @@
 
 void accept(ASTVisitor* visitor,ASTNode* node)
 {
+       // fprintf(stderr,"VOY A LLAMAR AL VISITOR DE TYPE\n");
     if(!node) return;
 
+        //fprintf(stderr,"VOY A LLAMAR AL VISITOR DE TYPE\n");
     switch (node->type)
     {
     case AST_PROGRAM:
+        //fprintf(stderr,"VOY A LLAMAR AL VISITOR DE TYPE\n");
         visitor->basic.program(visitor,node);
         break;
     case AST_NUM:
@@ -19,6 +22,7 @@ void accept(ASTVisitor* visitor,ASTNode* node)
         visitor->basic.string(visitor,node);
         break;
     case AST_VAR:
+        //fprintf(stderr,"VOY A LLAMAR AL VISITOR DE TYPE\n");
         visitor->basic.variable(visitor,node);
         break;
     case AST_BOOLEAN:
@@ -47,18 +51,21 @@ void accept(ASTVisitor* visitor,ASTNode* node)
         visitor->control.while_loop(visitor,node);
         break;
     case AST_DECL_FUNC:
-    fprintf(stderr,"VOY A LLAMAR AL METODO DE DECL_ FUNC\n");
+    //fprintf(stderr,"VOY A LLAMAR AL METODO DE DECL_ FUNC\n");
         visitor->control.dec_function(visitor,node);
         break;
 
     case AST_TYPE:
+    //fprintf(stderr,"VOY A LLAMAR AL VISITOR DE TYPE\n");
         visitor->types.type_dec(visitor,node);
         break;
     case AST_INSTANCE:
+       // fprintf(stderr,"VOY A LLAMAR AL VISITOR DE TYPE\n");
         visitor->types.type_instance(visitor,node);
         break;
     
     case AST_GETTER:
+       // fprintf(stderr,"VOY A LLAMAR AL VISITOR DE TYPE\n");
         visitor->attrs.getter(visitor,node);
         break;
     case AST_SETTER:
@@ -68,5 +75,6 @@ void accept(ASTVisitor* visitor,ASTNode* node)
     default:
         break;
     }
+
 }
 

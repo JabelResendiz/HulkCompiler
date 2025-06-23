@@ -1,0 +1,20 @@
+
+
+
+print(if(12<89)23 else 24);
+
+
+
+
+while(12 > 8 ){print(12);   }
+
+let x = 12 in print(23*x) ;
+
+
+print(23*(let x =12 in x));
+
+print(let x =12 in x*23);
+
+
+
+function f(x) => let y = 12 in x+12-y;

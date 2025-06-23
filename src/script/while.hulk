@@ -1,0 +1,8 @@
+
+
+type Point(x:Number,y:Number) {
+    x = x;
+    y = y;
+
+    getX() => self.x;
+}

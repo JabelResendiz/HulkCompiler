@@ -1,0 +1,19 @@
+
+decl_tpye:
+    TYPE ID LPAREN list_params RPAREN LBRACKET type_body RBRACKET
+    {
+        $$ = create_type_node($2,"", $4->args,$4->arg_count,NULL,0,$7->args,$7->arg_count);
+    }
+    | TYPE ID LBRACKET type_body RBRACKET
+    {
+        $$ = create_type_node($2,"",NULL,0,NULL,0,$4->args,$4->arg_count);
+    }
+    | TYPE ID INHERITS ID LBRACKET type_body RBRACKET
+    {
+        $$ = create_type_node($2,$4,NULL,0,NULL,0,$6->args,$6->arg_count);
+    }
+    | TYPE ID LPAREN list_params RPAREN INHERITS ID RPAREN list_args LPAREN LBRACKET type_body RBRACKET
+    {
+        $$ = create_type_node($2,$7,$4->args,$4->arg_count,$9->args,$9->arg_count,$12->args,$12->arg_count);
+    }
+;

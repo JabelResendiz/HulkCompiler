@@ -1,2 +1,0 @@
-# Compiler
-HULK language compiler

@@ -26,7 +26,28 @@
 *.a
 *.lib
 
+# LaTex compiled files
+*.aux
+*.log
+*.fls
+*.fdb_latexmk
+*.gz
+
 # Executables
 *.exe
 *.out
 *.app
+*.hulk
+
+# Folders
+build/
+.vscode/
+
+# Files
+lex.yy.c
+y.output
+y.tab.c
+y.tab.h
+/Hulk_project-main-2
+.DS_Store
+/H.U.L.K-Compiler

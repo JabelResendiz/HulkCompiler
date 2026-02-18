@@ -41,7 +41,7 @@ $(BUILD_DIR):
 
 # El directorio build se pone como dependencia order-only (con el símbolo |)
 $(EXEC): $(LEXER_DIR)/lex.yy.o $(PARSER_DIR)/y.tab.o $(AST_DIR)/ast.o $(SRC_DIR)/main.o \
-	$(VISITOR_DIR)/llvm_visitor.o  $(SCOPE_DIR)/llvm_scope.o $(UTILS_DIR)/utils.o \
+	$(VISITOR_DIR)/llvm_visitor.o  $(SCOPE_DIR)/llvm_scope.o $(UTILS_DIR)/utils.o $(UTILS_DIR)/logger.o \
     $(SEMANTIC_DIR)/unification.o $(SEMANTIC_DIR)/type_op_checking.o $(SEMANTIC_DIR)/type_checking.o \
 	$(SEMANTIC_DIR)/cond_loop_checking.o $(SEMANTIC_DIR)/function_checking.o $(SEMANTIC_DIR)/variable_checking.o \
 	$(SEMANTIC_DIR)/basic_checking.o $(SEMANTIC_DIR)/semantic.o $(SCOPE_DIR)/scope.o $(SCOPE_DIR)/context.o \
@@ -119,6 +119,10 @@ $(AST_DIR)/ast.o: $(AST_DIR)/ast.c $(AST_DIR)/ast.h
 
 $(UTILS_DIR)/utils.o: $(UTILS_DIR)/utils.c $(UTILS_DIR)/utils.h
 	@$(CC) $(CFLAGS) -c $< -o $@
+
+$(UTILS_DIR)/logger.o: $(UTILS_DIR)/logger.c $(UTILS_DIR)/logger.h
+	@$(CC) $(CFLAGS) -c $< -o $@
+
 
 $(SEMANTIC_DIR)/semantic.o: $(SEMANTIC_DIR)/semantic.c $(SEMANTIC_DIR)/semantic.h $(AST_DIR)/ast.h
 	@$(CC) $(CFLAGS) -c $< -o $@

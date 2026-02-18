@@ -2,49 +2,122 @@
 #include "./ast/ast.h"
 #include "./codegen/codegen.h"
 #include "./semantic_check/semantic.h"
-
-#define GREEN "\033[32m"
-#define BLUE "\033[34m"
-#define RESET "\033[0m"
-#define RED "\033[31m"
-#define CYAN "\033[36m"
-#define YELLOW "\033[33m"
+#include "./utils/colors.h"
+#include "./utils/logger.h"
 
 extern int yyparse(void);
 extern FILE *yyin;
 extern ASTNode *root;
 
-int main()
+/* ================== CONFIG ==================*/
+
+#define DEFAULT_INPUT "script.hulk"
+#define DEFAULT_OUTPUT "./build/output.ll"
+#define DEFAULT_LOG "./build/hulk.log"
+
+char input_file[256] = DEFAULT_INPUT;
+char output_file[256] = DEFAULT_OUTPUT;
+char log_file[256] = DEFAULT_LOG;
+
+void load_config(const char* filename)
 {
-    // --- Análisis léxico ---
-    FILE *lex_file = fopen("script.hulk", "r");
-    if (!lex_file)
+    FILE *f = fopen(filename,"r");
+    if(!f)
     {
-        perror("Error opening script.hulk");
-        return 1;
+        printf(YELLOW "No config file found (%s), using defaults\n" RESET, filename);
+        return;
     }
 
-    yyin = fopen("script.hulk", "r");
+    char line[512];
+    while(fgets(line, sizeof(line), f)) {
+        char key[128], value[256];
+
+        if (sscanf(line, "%127[^=]=%255s", key, value) == 2) {
+            if (strcmp(key, "input") == 0)
+                strncpy(input_file, value, sizeof(input_file));
+            else if (strcmp(key, "output") == 0)
+                strncpy(output_file, value, sizeof(output_file));
+        }
+    }
+
+    fclose(f);
+
+}
+
+/* ========================================= */
+
+int main(int argc, char* argv[])
+{
+    logger_init(log_file);
+    LOG_INFO("Hulk Compiler started");
+
+    load_config("conf/hulk.conf");
+    LOG_DEBUG("Config loaded from conf/hulk.conf");
+
+    if (argc > 1){
+        strncpy(input_file, argv[1], sizeof(input_file));
+        LOG_INFO("Input overridden by CLI: %s", input_file);
+    }
+        
+    printf(CYAN "Input file: %s\n" RESET, input_file);
+    printf(CYAN "Output file: %s\n" RESET, output_file);
+
+    /* Open input file */
+    LOG_INFO("Opening input file");
+    yyin = fopen(input_file, "r");
     if (!yyin)
     {
-        perror("Error opening script.hulk");
+        LOG_ERROR("Cannot open input file");
+        perror("Error opening input file");
         return 1;
     }
 
-    if (!yyparse() && !analyze_semantics(root))
+    /*Parse + semantic */
+    LOG_INFO("Parsing started");
+    if(yyparse())
     {
-        fclose(yyin);
-
-        printf(BLUE "\n🌳 Abstract Syntax Tree:\n" RESET);
-        print_ast(root, 0);
-
-        printf(CYAN "\nGenerating LLVM code...\n" RESET);
-        compile_to_llvm(root, "./build/output.ll");
-        printf(GREEN "✅ LLVM code generated succesfully in output.ll\n" RESET);
-
-        free_ast(root);
-        root = NULL;
+        LOG_ERROR("Parser failed");
+        return 1;
     }
+    LOG_INFO("Parsing OK");
+
+    LOG_INFO("Semantic analysis started");
+    if(analyze_semantics(root))
+    {
+        LOG_ERROR("Semantic error");
+        return 1;
+    }
+
+    LOG_INFO("Semantic analysis OK");
+
+    LOG_DEBUG("🌳 Abstract Syntax Tree:");
+    print_ast(root, 0);
+
+    LOG_INFO("Generating LLVM IR code ...");
+    compile_to_llvm(root, output_file);
+    LOG_INFO("✅ LLVM code generated succesfully in : %s", output_file);
+
+    free_ast(root);
+    root= NULL;
+    LOG_DEBUG("AST freed");
+
+    LOG_INFO("Compiler finished");
+    logger_close();
+
+    // if (!yyparse() && !analyze_semantics(root))
+    // {
+    //     fclose(yyin);
+
+    //     printf(BLUE "\n🌳 Abstract Syntax Tree:\n" RESET);
+    //     print_ast(root, 0);
+
+    //     printf(CYAN "\nGenerating LLVM code...\n" RESET);
+    //     compile_to_llvm(root, output_file);
+    //     printf(GREEN "✅ LLVM code generated succesfully in %s\n" RESET, output_file);
+
+    //     free_ast(root);
+    //     root = NULL;
+    // }
 
     return 0;
 }

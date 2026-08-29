@@ -244,8 +244,7 @@ Symbol* find_symbol(Scope* scope, const char* name) {
 
 // method to find a parameter in a scope hierarchy
 Symbol* find_parameter(Scope* scope, const char* name) {
-    fprintf(stderr,"estoy en lookup parameter , la variable que busco se llama %s\n",name);
-    
+
     
     
     if (!scope) {
@@ -254,11 +253,9 @@ Symbol* find_parameter(Scope* scope, const char* name) {
 
     Symbol* current = scope->symbols;
     int i = 0;
-    fprintf(stderr,"%d\n",scope->s_count);
+
     while (i < scope->s_count) {
-        fprintf(stderr,"La current name es %s\n",current->name);
-        fprintf(stderr,"el valor es %d\n", current->is_param);
-        
+
         if (current->is_param && !strcmp(current->name, name)) {
             return current;
         }
@@ -280,8 +277,6 @@ Symbol* find_parameter(Scope* scope, const char* name) {
 FuncData* find_function(Scope* scope, Function* f, Function* dec) {
     
     
-    fprintf(stderr, "estoy en el match de fucntion scope\n");
-
     
     if (!scope) {
         return NULL;
@@ -293,12 +288,7 @@ FuncData* find_function(Scope* scope, Function* f, Function* dec) {
     int i = 0;
 
     while (i < scope->functions->count) {
-        
-        fprintf(stderr,"la funcion current es %s\n\n", current->name);
-        //fprintf(stderr,"los tipos del arguemtno de %s es \n\n\n",f->args_types[0]->name);
-    
-        
-        
+                
         // Pack the errors or the function found
         Tuple* tuple = func_equals(current, f);
         if (tuple->matched) {
@@ -371,30 +361,24 @@ Symbol* find_defined_type(Scope* scope, const char* name) {
 
     Symbol* current = scope->defined_types;
 
-    fprintf(stderr,"1-fuego %d\n", scope->t_count);
-
     int i = 0;
 
     while (current) {
-        fprintf(stderr,"2-fuego y %s y %s\n",current->name,name);
-    
+
         if (!strcmp(current->name, name)) {
-            fprintf(stderr,"4-fuego\n");
-    
+
             return current;
         }
         current = current->next;
         i++;
     }
     
-    fprintf(stderr,"3-fuego\n");
-    
+ 
     if (scope->parent) {
         return find_defined_type(scope->parent, name);
     }
     
-    fprintf(stderr,"fuego\n");
-    
+
     return NULL;
 }
 
@@ -404,8 +388,7 @@ FuncData* find_type_data(Scope* scope, Function* f, Function* dec) {
         return NULL;
     }
 
-    fprintf(stderr,"ESTOY EN TYPE DATA Y LOS NOMBRES DE LAS FUNCIONES SON : %s y %s\n", f->name,dec->name);
-    
+
     FuncData* result = (FuncData*)malloc(sizeof(FuncData));
     int not_found = 1;
 
@@ -423,8 +406,6 @@ FuncData* find_type_data(Scope* scope, Function* f, Function* dec) {
             Tuple* tuple = func_equals(current, f);
             if (tuple->matched) {
 
-                fprintf(stderr,"el nombre de curr_sym es %s\n",current_sym->name);
-        
                 result->state = tuple;
                 result->func = current;
                 return result;

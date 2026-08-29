@@ -341,8 +341,6 @@ ASTNode *create_type_dec_node(
     node->data.type_node.p_constructor = p_constructor;
     node->derivations = NULL;
 
-    fprintf(stderr, "el node.choecked es %d\n", node->checked);
-
     return node;
 }
 
@@ -422,8 +420,6 @@ ASTNode *create_base_func_node(ASTNode **args, int arg_count)
 // method to free an AST node
 void free_ast(ASTNode *node)
 {
-    fprintf(stderr, "Vamos a liberar el AST\n");
-
     // if (!node)
     // {
     //     return;
@@ -449,17 +445,14 @@ void free_ast(ASTNode *node)
     //     free(node->data.program_node.statements);
     //     break;
     // case NODE_FUNC_CALL:
-    //     fprintf(stderr, "Estamos liberando una llamada a funcion con %d\n", node->data.func_node.arg_count);
     //     for (int i = 0; i < node->data.func_node.arg_count; i++)
     //     {
     //         free_ast(node->data.func_node.args[i]);
     //     }
     //     break;
     // case NODE_BASE_FUNC:
-    //     fprintf(stderr, "Estamos liberando una llamada a base funcion %d\n", node->data.func_node.arg_count);
     //     for (int i = 0; i < node->data.func_node.arg_count; i++)
     //     {
-    //         //fprintf(stderr,"aqui no hay nada\n");
     //         free_ast(node->data.func_node.args[i]);
     //     }
     //     break;

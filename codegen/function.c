@@ -16,7 +16,6 @@
 
 LLVMValueRef codegen_call_function(LLVMVisitor *v, ASTNode *node)
 {
-    fprintf(stderr, "ANDO EN EL CODEGEN DE CALL FUNCTION: nombre de la funcion %s\n", node->data.func_node.name);
 
     if (!strcmp(node->data.func_node.name, "print"))
     {
@@ -47,13 +46,12 @@ LLVMValueRef codegen_call_function(LLVMVisitor *v, ASTNode *node)
         return codegen_rand(v, node);
     }
 
-    fprintf(stderr, "VOY a entrar al codegen_custom_func\n");
     return codegen_custom_func(v, node);
 }
 
 LLVMValueRef codegen_print(LLVMVisitor *v, ASTNode *node)
 {
-    fprintf(stderr, "JABEL RESENDIZ\n");
+
     LLVMValueRef printf_func = LLVMGetNamedFunction(v->ctx->module, "printf");
 
     // Si no hay argumentos, solo imprime una nueva línea
@@ -69,13 +67,9 @@ LLVMValueRef codegen_print(LLVMVisitor *v, ASTNode *node)
     // Generar código para el argumento
     ASTNode *arg_node = node->data.func_node.args[0];
 
-     fprintf(stderr, YELLOW "1_DEBUG_PRINT_CALL\n" RESET);
-
-     fprintf(stderr,"el tipo de mi node es %d\n", arg_node->type);
 
     LLVMValueRef arg = codegen_accept(v, arg_node);
 
-    fprintf(stderr, YELLOW "2_DEBUG_PRINT_CALL\n" RESET);
 
     if (!arg)
         return NULL;
@@ -123,7 +117,6 @@ LLVMValueRef codegen_print(LLVMVisitor *v, ASTNode *node)
     LLVMTypeRef printf_type = LLVMFunctionType(LLVMInt32Type(),
                                                (LLVMTypeRef[]){LLVMPointerType(LLVMInt8Type(), 0)}, 1, 1);
 
-    fprintf(stderr, "JABEL RESENDIZ");
 
     return LLVMBuildCall2(v->ctx->builder, printf_type, printf_func, args, num_args, "printf_call");
 }
@@ -186,24 +179,20 @@ LLVMValueRef codegen_log(LLVMVisitor *v, ASTNode *node)
 
 LLVMValueRef codegen_custom_func(LLVMVisitor *v, ASTNode *node)
 {
-    fprintf(stderr, "estamos en el codegen call function\n");
 
     const char *name = node->data.func_node.name;
     int arg_count = node->data.func_node.arg_count;
     ASTNode **args = node->data.func_node.args;
     Type *return_type = node->return_type;
 
-    fprintf(stderr, "1-ADNDA MIERDAAA\n");
 
     LLVMValueRef func = LLVMGetNamedFunction(v->ctx->module, name);
 
     if (!func)
     {
-        fprintf(stderr, "Function '%s' not found.\n", name);
         exit(1);
     }
 
-    fprintf(stderr, "2-ADNDA MIERDAAA\n");
 
     LLVMValueRef *arg_values = malloc(sizeof(LLVMValueRef) * arg_count);
     for (int i = 0; i < arg_count; i++)
@@ -211,12 +200,10 @@ LLVMValueRef codegen_custom_func(LLVMVisitor *v, ASTNode *node)
         arg_values[i] = codegen_accept(v, args[i]);
         if (!arg_values[i])
         {
-            fprintf(stderr, "ERROR: arg_values[%d] is NULL\n", i);
             exit(1);
         }
     }
 
-    fprintf(stderr, "3-ADNDA MIERDAAA\n");
 
     LLVMTypeRef *param_types = malloc(arg_count * sizeof(LLVMTypeRef));
     for (int i = 0; i < arg_count; i++)
@@ -224,17 +211,12 @@ LLVMValueRef codegen_custom_func(LLVMVisitor *v, ASTNode *node)
         param_types[i] = type_to_llvm(v->ctx, args[i]->return_type);
     }
 
-    fprintf(stderr, "4-ADNDA MIERDAAA\n");
 
     LLVMTypeRef return_llvm_type = type_to_llvm(v->ctx, return_type);
 
     LLVMTypeRef func_type = LLVMFunctionType(return_llvm_type, param_types, arg_count, 0);
 
-    fprintf(stderr, "5-ADNDA MIERDAAA\n");
-
     const char *tmp_name = type_equals(return_type, &TYPE_VOID) ? "" : "calltmp";
-
-    fprintf(stderr, "CHECKER\n");
 
     LLVMValueRef call = LLVMBuildCall2(
         v->ctx->builder,
@@ -244,7 +226,6 @@ LLVMValueRef codegen_custom_func(LLVMVisitor *v, ASTNode *node)
         arg_count,
         tmp_name);
 
-    fprintf(stderr, "6-ADNDA MIERDAAA\n");
 
     free(arg_values);
     return call;
@@ -260,23 +241,17 @@ LLVMValueRef get_or_create_function(LLVMModuleRef module, const char *name,
 
         if (LLVMGetTypeKind(func_type) != LLVMFunctionTypeKind)
         {
-            fprintf(stderr, "ERROR: func_type is not a function type, sino %d\n", LLVMGetTypeKind(func_type));
             exit(1);
         }
-        fprintf(stderr, "es una func_type \n");
 
-        fprintf(stderr, "todo correcto\n");
         func = LLVMAddFunction(module, name, func_type);
     }
-
-    fprintf(stderr, "es una funcion type, tl vez no\n");
 
     return func;
 }
 
 LLVMValueRef codegen_dec_function(LLVMVisitor *v, ASTNode *node)
 {
-    fprintf(stderr, "estamos en el decl_function_codegen \n");
 
     LLVMModuleRef module = v->ctx->module;
     LLVMBuilderRef builder = v->ctx->builder;
@@ -298,8 +273,6 @@ LLVMValueRef codegen_dec_function(LLVMVisitor *v, ASTNode *node)
 
     LLVMTypeRef ret_llvm_type = type_to_llvm(v->ctx, return_type);
 
-    fprintf(stderr, "el tipo de retorno es %s\n", return_type->name);
-
     LLVMValueRef func = get_or_create_function(module, name, ret_llvm_type, param_types, param_count);
     v->current_function = func;
     LLVMBasicBlockRef entry = LLVMAppendBasicBlock(func, "entry");
@@ -315,30 +288,25 @@ LLVMValueRef codegen_dec_function(LLVMVisitor *v, ASTNode *node)
     LLVMValueRef new_depth = LLVMBuildAdd(builder, depth_val, LLVMConstInt(int32_type, 1, 0), "inc_depth");
     LLVMBuildStore(builder, new_depth, current_stack_depth_var);
 
-    fprintf(stderr, "2-HOOLAAAAAAAAAAAAA\n");
 
     // Verificar overflow
     LLVMValueRef cmp = LLVMBuildICmp(builder, LLVMIntSGT, new_depth,
                                      LLVMConstInt(LLVMInt32Type(), max_stack_depth, 0), "cmp_overflow");
 
-    fprintf(stderr, "3-HOOLAAAAAAAAAAAAA\n");
 
     // Crear bloques para manejo de error
     LLVMBasicBlockRef error_block = LLVMAppendBasicBlock(func, "stack_overflow");
     LLVMBasicBlockRef continue_block = LLVMAppendBasicBlock(func, "func_body");
     LLVMBuildCondBr(builder, cmp, error_block, continue_block);
     
-     fprintf(stderr, "4-HOOLAAAAAAAAAAAAA\n");
     // Bloque de error
     LLVMPositionBuilderAtEnd(builder, error_block);
     llvm_handle_stack_overflow(v->ctx, node);
 
-     fprintf(stderr, "5-HOOLAAAAAAAAAAAAA\n");
     // Continuar con función normal
     LLVMPositionBuilderAtEnd(builder, continue_block);
 
     push_scope();
-    fprintf(stderr, "6-HOOLAAAAAAAAAAAAA\n");
     
     // Almacenar parámetros en variables locales
     for (int i = 0; i < param_count; i++)
@@ -348,17 +316,15 @@ LLVMValueRef codegen_dec_function(LLVMVisitor *v, ASTNode *node)
         LLVMBuildStore(builder, param, alloca);
         declare_variable(params[i]->data.variable_name, alloca);
     }
-     fprintf(stderr, "8-HOOLAAAAAAAAAAAAA\n");
     // Generar código para el cuerpo
     LLVMValueRef body_val = codegen_accept(v, body);
     
-     fprintf(stderr, "9-HOOLAAAAAAAAAAAAA\n");
     // Branch al bloque de salida
     LLVMBuildBr(builder, exit_block);
 
     // Bloque de salida
     LLVMPositionBuilderAtEnd(builder, exit_block);
-    fprintf(stderr, "7-HOOLAAAAAAAAAAAAA\n");
+
     // Decrementar contador antes de retornar
     LLVMValueRef final_depth = LLVMBuildLoad2(builder, int32_type, current_stack_depth_var, "load_depth_final");
     LLVMValueRef dec_depth = LLVMBuildSub(builder, final_depth, LLVMConstInt(int32_type, 1, 0), "dec_depth");
@@ -383,7 +349,6 @@ LLVMValueRef codegen_dec_function(LLVMVisitor *v, ASTNode *node)
     pop_scope();
     free(param_types);
 
-    fprintf(stderr, "TODO CON EXITO EN EL DEC_FUCNTION\n");
 
     return func;
 }
@@ -392,7 +357,6 @@ LLVMValueRef codegen_dec_function(LLVMVisitor *v, ASTNode *node)
 
 LLVMValueRef codegen_dec_method(LLVMVisitor* v, ASTNode* node, LLVMUserTypeInfo* type_info)
 {
-    fprintf(stderr, "Estamos en codegen_dec_method para el método: %s\n", node->data.func_node.name);
 
     LLVMModuleRef module = v->ctx->module;
     LLVMBuilderRef builder = v->ctx->builder;
@@ -434,8 +398,6 @@ LLVMValueRef codegen_dec_method(LLVMVisitor* v, ASTNode* node, LLVMUserTypeInfo*
 
 
     LLVMTypeRef ret_llvm_type = type_to_llvm(v->ctx, return_type);
-
-    fprintf(stderr, "El tipo de retorno del método %s es %s\n", method_name, return_type->name);
 
     // Obtener o crear la función LLVM (usa el nombre decorado si es necesario, e.g., "_A_setX")
     // Para los métodos, el nombre de la función LLVM debe ser único, como "_<ClassName>_<MethodName>"
@@ -516,8 +478,6 @@ LLVMValueRef codegen_dec_method(LLVMVisitor* v, ASTNode* node, LLVMUserTypeInfo*
 
     pop_scope();
     free(llvm_param_types);
-
-    fprintf(stderr, "Método %s generado con éxito.\n", method_name);
 
     return func;
 }

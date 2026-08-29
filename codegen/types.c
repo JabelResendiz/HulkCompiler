@@ -80,15 +80,13 @@
 //     // --- 6. Definición d  e la Instancia Global de Vtable (@A_vtable_instance) ---
 //     // @A_vtable_instance = internal global %A_vtable { i32 (%A*)* @_A_getX }
 
-//     fprintf(stderr,"Jabel Resendiz \n");
+
 //     LLVMValueRef vtable_initializer_values[] = { }; // getX_func ya es de tipo i32 (%A*)*
 
-//     fprintf(stderr,"Aguirre \n");
+
 
 //     // aqui el segundo 0 debe ser relacionado con los metodos de vtable_initilizer_value
 //     LLVMValueRef A_vtable_constant = LLVMConstStruct(vtable_initializer_values, 0, 0);
-    
-//     fprintf(stderr,"Aguirre\n");
 
 //     LLVMValueRef A_vtable_instance_global = LLVMAddGlobal(v->ctx->module, A_vtable_struct_type, "A_vtable_instance");
 //     LLVMSetInitializer(A_vtable_instance_global, A_vtable_constant);

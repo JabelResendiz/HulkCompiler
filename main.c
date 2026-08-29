@@ -74,6 +74,7 @@ int main(int argc, char* argv[])
 
     /*Parse + semantic */
     LOG_INFO("Parsing started");
+    printf("Parsing staarted\n");
     if(yyparse())
     {
         LOG_ERROR("Parser failed");

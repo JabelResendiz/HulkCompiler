@@ -122,10 +122,7 @@ void visit_function_dec(Visitor* v, ASTNode* node) {
 // method to check function declaration node
 void check_function_dec(Visitor* v, ASTNode* node, Type* type) {
     // To prevent loops 
-    
-    fprintf(stderr, "ESTOY EN EL CHECK DEC FUNCTION\n");
-
-    
+        
     if (node->checked) {
         
         return;
@@ -417,8 +414,4 @@ void check_function_dec(Visitor* v, ASTNode* node, Type* type) {
         v->current_function = visitor_function;
     }
 
-    fprintf(stderr, "asasdasd :%s y  %s\n", node->data.func_node.name, node->return_type->name);
-    //  fprintf(stderr,"222222222222222222222222222222222222222222el tipo de curent es %s\n y nombre de \n ",node->scope->functions->first->args_types[0]->name);
-
-    fprintf(stderr, "EXITO AL DECLARAR UNA FUNCION\n");
 }

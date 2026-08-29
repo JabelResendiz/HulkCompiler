@@ -141,12 +141,10 @@ LLVMValueRef handle_object_operation(LLVMVisitor *v, LLVMValueRef left, LLVMValu
 
 LLVMValueRef codegen_binary_op(LLVMVisitor *v, ASTNode *node)
 {
-    fprintf(stderr, "Estamos en el vist de binary op codegen\n");
 
     LLVMValueRef L = codegen_accept(v, node->data.op_node.left);
     LLVMValueRef R = codegen_accept(v, node->data.op_node.right);
 
-    fprintf(stderr, "1-CODEGEN bo debug\n");
 
     // Manejo de operaciones con strings (concatenación)
     if (node->data.op_node.op == OP_CONCAT || node->data.op_node.op == OP_DCONCAT)
@@ -213,11 +211,9 @@ LLVMValueRef codegen_binary_op(LLVMVisitor *v, ASTNode *node)
     // Si los operandos son números
     if (type_equals(node->data.op_node.left->return_type, &TYPE_NUMBER))
     {
-        fprintf(stderr, RED"ESTAMOS EN ESTA PARTE DE BINARY_OP_CODEGEN\n" RESET);
         switch (node->data.op_node.op)
         {
         case OP_ADD:
-            fprintf(stderr,"RETORNAMOS ESTO ,UNA SUMA\n");
             return LLVMBuildFAdd(v->ctx->builder, L, R, "add_tmp");
         case OP_SUB:
             return LLVMBuildFSub(v->ctx->builder, L, R, "sub_tmp");
@@ -261,7 +257,6 @@ LLVMValueRef codegen_binary_op(LLVMVisitor *v, ASTNode *node)
     // Operadores lógicos
     if (type_equals(node->data.op_node.left->return_type, &TYPE_BOOLEAN))
     {
-        fprintf(stderr, "JABEL RESENDIZ binary operador");
         switch (node->data.op_node.op)
         {
         case OP_AND:
@@ -311,15 +306,11 @@ LLVMValueRef codegen_binary_op(LLVMVisitor *v, ASTNode *node)
         }
     }
 
-    fprintf(stderr, "SERES HUMANOS\n");
 
     // Manejo de operaciones con objetos
     if (type_equals(node->data.op_node.left->return_type, &TYPE_OBJECT) ||
         type_equals(node->data.op_node.right->return_type, &TYPE_OBJECT))
     {
-
-        fprintf(stderr, "SERES HUMANOS\n");
-
         return handle_object_operation(v, L, R, node->data.op_node.op);
     }
 
@@ -329,7 +320,6 @@ LLVMValueRef codegen_binary_op(LLVMVisitor *v, ASTNode *node)
 LLVMValueRef codegen_let_in(LLVMVisitor *v, ASTNode *node)
 {
 
-    fprintf(stderr, "ESTYOY EN EL CODEGEN DE LET_IN\n");
     LLVMModuleRef module = v->ctx->module;
     LLVMBuilderRef builder = v->ctx->builder;
 
@@ -343,12 +333,10 @@ LLVMValueRef codegen_let_in(LLVMVisitor *v, ASTNode *node)
     {
         ASTNode *decl = declarations[i];
         const char *var_name = decl->data.op_node.left->data.variable_name;
-        fprintf(stderr, "let in vaaaa\n");
         LLVMValueRef value = codegen_accept(v, decl->data.op_node.right);
         if (!value)
             return NULL;
 
-        fprintf(stderr, "3-let in vaaaa\n");
         // Crear alloca para la variable
         LLVMTypeRef var_type = type_to_llvm(v->ctx, decl->data.op_node.right->return_type);
         LLVMValueRef alloca = LLVMBuildAlloca(builder, var_type, var_name);
@@ -356,7 +344,6 @@ LLVMValueRef codegen_let_in(LLVMVisitor *v, ASTNode *node)
         declare_variable(var_name, alloca);
     }
 
-    fprintf(stderr, "2-let in vaaaa\n");
     // Obtener el bloque actual antes de evaluar el cuerpo
     LLVMBasicBlockRef current_block = LLVMGetInsertBlock(builder);
 

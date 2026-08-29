@@ -84,11 +84,9 @@ int save_context_for_type(Context* context, struct ASTNode* item, char* type_nam
 // <----------SEARCHES---------->
 
 // method to finde a context item
-struct ContextItem* find_context_item(Context* context, char* name, int type, int var) {
-    
-    fprintf(stderr, "Voy a buscar %s que es tipo: %d y es un var %d\n", name, type, var);
-
-    
+struct ContextItem* find_context_item(Context* context, char* name, int type, int var) 
+{
+        
     if (!context) {
         return NULL;
     }
@@ -113,7 +111,6 @@ struct ContextItem* find_context_item(Context* context, char* name, int type, in
         return find_context_item(context->parent, name, type, var);
     }
     
-    fprintf(stderr,"No esta en el entorno\n");
     return NULL;
 }
 

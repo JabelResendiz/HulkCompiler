@@ -58,7 +58,6 @@ LLVMValueRef accept_gen(LLVM_Visitor* visitor, ASTNode* node) {
         case NODE_BASE_FUNC:
             return visitor->visit_base_call(visitor,node);
         default:
-            fprintf(stderr, "Unknown node type in code generation\n");
             exit(1);
     }
 }

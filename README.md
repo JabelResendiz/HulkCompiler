@@ -27,6 +27,10 @@ Donde:
 - **llvm**: Infraestructura de compilación de código intermedio
 - **clang**: Compilador de C/C++ que también compila LLVM IR
 
+### Crear el tester
+
+En el archivo de `conf/hulk.conf` esta el archivo que indica la ubicacion del archiov de tester que se compilara. Asegure que su archivo tenga extension `x.hulk` y se encuentra en la ubicacion de `tests/`.
+
 ### Compilar el Proyecto
 
 ```bash
@@ -231,4 +235,4 @@ Más ejemplos disponibles en `script.hulk`
 
 ---
 
-**Última actualización**: Febrero 2026
+**Última actualización**: Agosto 2026

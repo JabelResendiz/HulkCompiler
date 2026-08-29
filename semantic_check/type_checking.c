@@ -7,9 +7,6 @@ void visit_type_dec(Visitor* v, ASTNode* node) {
     // checking circular inheritance
 
 
-    fprintf(stderr, "ESTOY EN LA DECLARACION DE UN TIPO\n");
-    fprintf(stderr,"EL node.checked es %d\n", node->checked);
-
     if (find_type_in_mro(node->data.type_node.parent_name, mro_list)) {
         report_error(
             v, "Circular inheritance detected. Line: %d.", node->line
@@ -20,7 +17,6 @@ void visit_type_dec(Visitor* v, ASTNode* node) {
 
     // to prevent loops
     if (node->checked) {
-          fprintf(stderr,"YA SE INSPECCIONO\n");
         return;
     }
 
@@ -121,7 +117,6 @@ void visit_type_dec(Visitor* v, ASTNode* node) {
             free(param_type);
     }
 
-    fprintf(stderr,"JABEL RESEMDIZ\n");
 
     Symbol* parent_info = find_defined_type(node->scope, node->data.type_node.parent_name);
     Type* parent_type = &TYPE_OBJECT;
@@ -172,9 +167,6 @@ void visit_type_dec(Visitor* v, ASTNode* node) {
         parent_type = parent_info->type;
     }
 
-
-    fprintf(stderr,"JABEL RESEMDIZ\n");
-    
     // Taking parent parameters if it doesn't have any
     if (!is_builtin_type(parent_type) && !node->data.type_node.p_constructor) {
         node->data.type_node.arg_count = parent_type->arg_count;
@@ -219,7 +211,6 @@ void visit_type_dec(Visitor* v, ASTNode* node) {
     item->return_type = this;
     v->current_type = this; // save it as current in the visitor for 'base' node
 
-    fprintf(stderr,"JABEL RESEMDIZ\n");
     
     // Collecting context of the type
     for (int i = 0; i < node->data.type_node.def_count; i++) {
@@ -268,16 +259,6 @@ void visit_type_dec(Visitor* v, ASTNode* node) {
     }
 
 
-    //  Symbol* actual = node->scope->symbols;
-
-    // while(actual)
-    // {
-    //     fprintf(stderr,"MI nombre es %s y soy parametro %d\n",actual->name, actual->is_param);
-    //     actual = actual->next;
-    // }
-    // exit(1);
-
-
     // Returning changes made to parameters
     for (int i = 0; i < node->data.type_node.arg_count; i++)
     {
@@ -287,12 +268,6 @@ void visit_type_dec(Visitor* v, ASTNode* node) {
         sym->is_type_param = 0;
     }
 
-     fprintf(stderr,"hay %d simbolos\n",node->scope->s_count);
-   // exit(1);
-
-   
-
-
     Type** param_types = map_get_type(params, node->data.type_node.arg_count);
 
 
@@ -301,15 +276,13 @@ void visit_type_dec(Visitor* v, ASTNode* node) {
     // Checking that no parameter is annotated as Any
     for (int i = 0; i < node->data.type_node.arg_count; i++)
     {
-        fprintf(stderr,"La variable que voy a buscar es %s\n",params[i]->data.variable_name);
-        
+
         Symbol* param = find_parameter(node->scope, params[i]->data.variable_name);
         
        // exit(1);
         if(param == NULL)
         {
-            fprintf(stderr,"11-JABEL RESEMDIZ\n");
-    exit(1);
+            exit(1);
         }
 
 
@@ -366,9 +339,6 @@ void visit_type_dec(Visitor* v, ASTNode* node) {
 // method to check type instance node
 void visit_type_instance(Visitor* v, ASTNode* node) {
    
-    fprintf(stderr, "EstAMOS EN EL TYPE INSTANCE\n");
-
-   
     ASTNode** args = node->data.type_node.args;
 
     for (int i = 0; i < node->data.type_node.arg_count; i++)
@@ -417,8 +387,6 @@ void visit_type_instance(Visitor* v, ASTNode* node) {
     f->args_types = args_types;
 
     Function* dec = NULL;
-
-    fprintf(stderr,"JABEL RESENDIZ\n");
 
     if (item && item->return_type) {
         Type** dec_args_types = map_get_type(

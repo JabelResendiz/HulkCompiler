@@ -69,14 +69,10 @@ LLVMValueRef codegen_boolean(LLVMVisitor *v, ASTNode *node)
 LLVMValueRef codegen_variable(LLVMVisitor *v, ASTNode *node)
 {
 
-    fprintf(stderr, RED "ESTO EN EL CODEGEN_VARIABLE\n" RESET);
-
     LLVMModuleRef module = v->ctx->module;
     LLVMBuilderRef builder = v->ctx->builder;
 
     const char *var_name = node->data.variable_name;
-
-    fprintf(stderr, "El nombre de mi variable es %s\n", var_name);
 
     // --- Special handling for 'self' ---
     // 'self' is the first argument to any method.
@@ -88,7 +84,6 @@ LLVMValueRef codegen_variable(LLVMVisitor *v, ASTNode *node)
         // Ensure we are in a function context. If not, it's an error (e.g., 'self' outside a method).
         if (!v->current_function)
         { // You need to track the current function being generated
-            fprintf(stderr, RED "Error: 'self' utilizado fuera del contexto de una función de clase.\n" RESET);
             return NULL;
         }
         // 'self' is always the first parameter (index 0)
@@ -96,7 +91,6 @@ LLVMValueRef codegen_variable(LLVMVisitor *v, ASTNode *node)
         // If your 'self' is a pointer, you'll just return it.
         // If your language uses value semantics for 'self', you might need to load it if it's an alloca.
         // But for OOP, 'self' is typically a pointer passed by value.
-        fprintf(stderr, YELLOW "DEBUG: Devolviendo el parámetro 'self' (%s).\n" RESET, LLVMPrintValueToString(self_param));
         return self_param;
     }
 
@@ -105,26 +99,15 @@ LLVMValueRef codegen_variable(LLVMVisitor *v, ASTNode *node)
 
     if (!alloca)
     {
-        fprintf(stderr, "Error: Variable '%s' no declarada\n", node->data.variable_name);
         return NULL;
     }
-
-    // LLVMTypeRef var_ptr_type = LLVMTypeOf(alloca);           // alloca es un puntero
-    // fprintf(stderr,"UN tremendo problema aqui\n");
-    // LLVMTypeRef var_type = LLVMGetElementType(var_ptr_type); // tipo apuntado
-    //     fprintf(stderr,"UN tremendo problema aqui\n");
-    // LLVMValueRef loaded = LLVMBuildLoad2(builder, var_type, alloca, "tmp");
-    // fprintf(stderr,"UN tremendo problema aqui\n");
 
     LLVMTypeRef var_type = type_to_llvm(v->ctx, node->return_type);
 
     LLVMValueRef loaded = LLVMBuildLoad2(builder, var_type, alloca, "tmp");
 
-    fprintf(stderr, "Hasta aqui todo joya\n");
     if (node->return_type && node->return_type != NULL)
     {
-        fprintf(stderr, "candela\n");
-
         return loaded;
     }
 
@@ -183,12 +166,10 @@ LLVMValueRef codegen_variable(LLVMVisitor *v, ASTNode *node)
         return loaded;
     }
 
-    fprintf(stderr, "VOY A SALIR DE codegen variable \n");
 }
 
 LLVMValueRef codegen_assignments(LLVMVisitor *v, ASTNode *node)
 {
-    fprintf(stderr, "ESTOY EN EL CODEGEN DEL ASSIGNMENT\n");
     LLVMModuleRef module = v->ctx->module;
     LLVMBuilderRef builder = v->ctx->builder;
 
@@ -218,7 +199,6 @@ LLVMValueRef codegen_assignments(LLVMVisitor *v, ASTNode *node)
 
     if (existing_alloca)
     {
-        fprintf(stderr, "no hay error se ecnotro la variable\n");
 
         // Para asignación destructiva (:=), actualizar en todos los scopes
         if (node->type == NODE_D_ASSIGNMENT)
@@ -243,7 +223,6 @@ LLVMValueRef codegen_assignments(LLVMVisitor *v, ASTNode *node)
     }
 
     char *alloca_str = LLVMPrintValueToString(alloca);
-    fprintf(stderr, "Guardando el valor en la variable %s (alloca: %s)\n",  var_name, alloca_str);
     //LLVMDisposeMessage(val_str);
     LLVMDisposeMessage(alloca_str);
     exit(1);
@@ -256,8 +235,6 @@ LLVMValueRef codegen_assignments(LLVMVisitor *v, ASTNode *node)
     // Para asignación destructiva (:=), retornar el valor asignado
     if (node->type == NODE_D_ASSIGNMENT)
     {
-        fprintf(stderr, "0000000000000000000000000000000\n");
-
         return value;
     }
     return NULL;

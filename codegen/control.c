@@ -8,7 +8,6 @@ LLVMValueRef codegen_conditional(LLVMVisitor *v, ASTNode *node)
 {
     // Extraccion de sub-arboles del AST
 
-    fprintf(stderr, "JABEL RESENDIZ COMPILADOR\n");
     ASTNode *cond = node->data.cond_node.cond;
     ASTNode *body = node->data.cond_node.body_true;
     ASTNode *else_branch = node->data.cond_node.body_false;
@@ -91,7 +90,6 @@ LLVMValueRef codegen_conditional(LLVMVisitor *v, ASTNode *node)
 
     LLVMAddIncoming(phi, incoming_value, incoming_blocks, else_block ? 2 : 1);
 
-    fprintf(stderr, "JABEL RESENDIZ COMPILADOR COJOEN\n");
 
     return phi;
 }
@@ -160,7 +158,6 @@ LLVMValueRef codegen_block(LLVMVisitor *v, ASTNode *node)
     push_scope();
     LLVMValueRef last = NULL;
 
-    fprintf(stderr, "JABEL RESENDIZ\n");
 
     for (int i = 0; i < node->data.program_node.count; i++)
     {
@@ -169,7 +166,6 @@ LLVMValueRef codegen_block(LLVMVisitor *v, ASTNode *node)
         {
             last = codegen_accept(v, stmt);
         }
-        fprintf(stderr, "JABEL RESENDIZ\n");
     }
 
     if(last) pop_scope();

@@ -94,8 +94,6 @@ void visit_test_type(Visitor *v, ASTNode *node)
 void visit_attr_getter(Visitor *v, ASTNode *node)
 {
 
-    fprintf(stderr, "ESTAMOS EN EL GETTER DE UNA FUNCION\n");
-
     ASTNode *instance = node->data.op_node.left;
     ASTNode *member = node->data.op_node.right;
 
@@ -107,11 +105,9 @@ void visit_attr_getter(Visitor *v, ASTNode *node)
     accept(v, instance);
     Type *instance_type = instance->dynamic_type;
 
-    fprintf(stderr, "Instance_type es de tipo %s\n", instance_type->name);
 
     if (type_equals(instance_type, &TYPE_ERROR))
     {
-        fprintf(stderr, "INSTANCE_TYPE ES UN ERROR\n");
 
         node->return_type = &TYPE_ERROR;
         node->dynamic_type = &TYPE_ERROR;
@@ -120,7 +116,6 @@ void visit_attr_getter(Visitor *v, ASTNode *node)
     else if (type_equals(instance_type, &TYPE_ANY))
     {
 
-        fprintf(stderr, "INSTANCE_TYPE ES UN GENERIC\n");
 
         if (!unify_type_by_attr(v, node))
         {
@@ -135,7 +130,6 @@ void visit_attr_getter(Visitor *v, ASTNode *node)
         }
     }
 
-    fprintf(stderr, "TODO BIEN\n");
 
     // attributes are private, so they only can be gotten using self
     if (member->type == NODE_VARIABLE && ((
@@ -243,33 +237,12 @@ void visit_attr_getter(Visitor *v, ASTNode *node)
     node->return_type = get_type(member);
     node->dynamic_type = get_type(member);
 
-    // if(node->derivations== NULL)
-    // {
-    //     fprintf(stderr,"es completamente nulo");
-    //     exit(1);
-    // }
-
-    fprintf(stderr, "1223\n");
-    // if (!node)
-    // {
-    //     fprintf(stderr, "Error: node es NULL\n");
-    //     exit(1);
-    // }
-    // if (!node->derivations)
-    // {
-    //     fprintf(stderr, "Error: node->derivations es NULL\n");
-    //     exit(1);
-    // }
-    // exit(1);
-
     node->derivations = add_node_list(member, node->derivations);
 }
 
 // method to visit attribute setter node
 void visit_attr_setter(Visitor *v, ASTNode *node)
 {
-
-    fprintf(stderr, "ESTAMOS EN EL SETTER DE UNA FUNCION\n");
 
     ASTNode *instance = node->data.cond_node.cond;
     ASTNode *member = node->data.cond_node.body_true;
@@ -313,11 +286,9 @@ void visit_attr_setter(Visitor *v, ASTNode *node)
         instance_type,
         member->data.variable_name);
 
-    fprintf(stderr, "TODO BIEN EN EL SETTER 1\n");
 
     if (sym)
     {
-        fprintf(stderr, "ESTA EN EL SCOPE\n");
         member->return_type = sym->type;
         member->dynamic_type = sym->dyn;
         member->is_param = sym->is_param;
@@ -404,7 +375,6 @@ void visit_attr_setter(Visitor *v, ASTNode *node)
 
 void visit_base_func(Visitor *v, ASTNode *node)
 {
-    fprintf(stderr,"ESTAMOS EN EL VISIT DE BASE _FUNC \n");
 
     // Extrae los argumentos pasados a la llamada 'base()' del nodo AST.
     ASTNode *base_call_args = node->data.func_node.args;
@@ -442,7 +412,6 @@ void visit_base_func(Visitor *v, ASTNode *node)
 
     node->data.base_method.original_method_name = original_method_name;
 
-    fprintf(stderr,"EL nombre original es %s\n",original_method_name);
 
     if (!original_method_name)
     {
@@ -459,19 +428,11 @@ void visit_base_func(Visitor *v, ASTNode *node)
 
     ContextItem *base_method_item = find_item_in_type_hierarchy(parent_type->dec->context, name_parent, parent_type, 1);
 
-    fprintf(stderr,RED"el nombre del parent es %s y el metodo es %s\n" RESET, parent_type->name,name_parent);
-    
-    if(base_method_item == NULL)
-    {
-        fprintf(stderr,"kolololol\n");
-    }
 
     ASTNode *base_method_declaration_node = base_method_item->declaration;
     // Asegúrate de que el nodo de declaración del método base ha sido visitado
     // para que sus tipos de parámetros y retorno estén resueltos.
     accept(v, base_method_declaration_node); // Esto resuelve el return_type del método base
-
-    fprintf(stderr,"Estamos aqui\n");
 
     // 3. Validar los argumentos pasados a 'base()' contra la firma del método base
     // Vamos a crear un "nodo de llamada simulado" para reusar check_function_call.
@@ -482,9 +443,6 @@ void visit_base_func(Visitor *v, ASTNode *node)
     // La clave es pasar el tipo del *padre* para la verificación de la función.
     check_function_call(v, simulated_call_node, parent_type); // Ahora check_function_call sabe que buscar en 'parent_type'
 
-
-    fprintf(stderr,"ALABAOLAAAA\n");
-
     // Si check_function_call encuentra un error, ya lo reportará y el return_type de simulated_call_node será TYPE_ERROR.
     if (simulated_call_node->return_type == &TYPE_ERROR) {
         node->return_type = &TYPE_ERROR;
@@ -493,14 +451,12 @@ void visit_base_func(Visitor *v, ASTNode *node)
         return;
     }
 
-    fprintf(stderr,"aquiiiii\n");
 
     // 4. Establecer el tipo de retorno del nodo 'base'
     node->return_type = simulated_call_node->return_type;
     node->dynamic_type = simulated_call_node->dynamic_type;
     node->name_method_base = name_parent;
 
-    fprintf(stderr,"2-aquiiiiii\n");
 
     free_ast(simulated_call_node); // Libera el nodo temporal
     // Ya no reportamos un error aquí. Si llegamos hasta aquí, la base call es semánticamente válida.

@@ -148,8 +148,6 @@ NodeList* add_node_list(struct ASTNode* value, NodeList* list) {
         new_list->first = element;
         new_list->count = list->count + 1;
     } else {
-        fprintf(stderr,"clase candea\n");
-        
         new_list->first = element;
         new_list->count = 1;
     }

@@ -3,27 +3,21 @@
 // method to select the visit method of a given node
 void accept(Visitor *visitor, ASTNode *node)
 {
-    fprintf(stderr,"esto es magia mi loco");
 
     if (!node)
     {
         return;
     }
 
-    fprintf(stderr,"esto es magia mi loco");
-
     switch (node->type)
     {
     case NODE_PROGRAM:
-        fprintf(stderr, "ESTAMOS EN EL VISIT DE PROGRAM\n");
         visitor->visit_program(visitor, node);
         break;
     case NODE_NUMBER:
-        fprintf(stderr, "ESTAMOS EN EL VISIT DE NUMBER\n");
         visitor->visit_number(visitor, node);
         break;
     case NODE_STRING:
-        fprintf(stderr, "ESTAMOS EN EL VISIT DE STRING\n");
         visitor->visit_string(visitor, node);
         break;
     case NODE_BOOLEAN:
@@ -33,31 +27,25 @@ void accept(Visitor *visitor, ASTNode *node)
         visitor->visit_unary_op(visitor, node);
         break;
     case NODE_BINARY_OP:
-        fprintf(stderr, "ESTAMOS EN EL VISIT DE binary op\n");
         visitor->visit_binary_op(visitor, node);
         break;
     case NODE_ASSIGNMENT:
     case NODE_D_ASSIGNMENT:
-        fprintf(stderr, "ESTAMOS EN EL VISIT DE ASSIGNEMTNS\n");
         visitor->visit_assignment(visitor, node);
         break;
     case NODE_VARIABLE:
-        fprintf(stderr, "ESTAMOS EN EL VISIT DE VARAIBLE\n");
         visitor->visit_variable(visitor, node);
         break;
     case NODE_FUNC_CALL:
         visitor->visit_function_call(visitor, node);
         break;
     case NODE_BLOCK:
-        fprintf(stderr, "ESTAMOS EN EL VISIT DE block\n");
         visitor->visit_block(visitor, node);
         break;
     case NODE_FUNC_DEC:
-        fprintf(stderr,"ESTAMOS EN EL VISIT DE NODE_DECL_FUNC\n");
         visitor->visit_function_dec(visitor, node);
         break;
     case NODE_LET_IN:
-            fprintf(stderr, "ESTAMOS EN EL VISIT DE let in\n");
         visitor->visit_let_in(visitor, node);
         break;
     case NODE_CONDITIONAL:
@@ -73,31 +61,24 @@ void accept(Visitor *visitor, ASTNode *node)
         visitor->visit_for_loop(visitor, node);
         break;
     case NODE_TYPE_DEC:
-                fprintf(stderr, "ESTAMOS EN EL VISIT DE type declaration\n");
         visitor->visit_type_dec(visitor, node);
         break;
     case NODE_TYPE_INST:
-                fprintf(stderr, "ESTAMOS EN EL VISIT DE type instance\n");
         visitor->visit_type_instance(visitor, node);
         break;
     case NODE_TEST_TYPE:
-                fprintf(stderr, "ESTAMOS EN EL VISIT DE test type\n");
         visitor->visit_test_type(visitor, node);
         break;
     case NODE_CAST_TYPE:
-                fprintf(stderr, "ESTAMOS EN EL VISIT DE cast type\n");
         visitor->visit_casting_type(visitor, node);
         break;
     case NODE_TYPE_GET_ATTR:
-        fprintf(stderr, "ESTAMOS EN EL VISIT DE GETTER\n");
         visitor->visit_attr_getter(visitor, node);
         break;
     case NODE_TYPE_SET_ATTR:
-        fprintf(stderr, "ESTAMOS EN EL VISIT DE SETTER \n");
         visitor->visit_attr_setter(visitor, node);
         break;
     case NODE_BASE_FUNC:
-                fprintf(stderr, "ESTAMOS EN EL VISIT DE base function\n");
         visitor->visit_base_func(visitor, node);
         break;
     }
